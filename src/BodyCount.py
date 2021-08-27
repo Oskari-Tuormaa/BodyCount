@@ -1,4 +1,4 @@
-#Author-
+#Author-Oskari Tuormaa
 #Description-
 
 import adsk.core, adsk.fusion, adsk.cam, traceback
@@ -22,9 +22,6 @@ def count_unique(arr: List[object]) -> Dict[object, int]:
     """
     res = dict()
     reg = re.compile("^.*?(?=$|\(.*?\))")
-
-    #names = [x.name for x in arr if x.isVisible]
-    #names.sort()
 
     for val in arr:
         if not val.isVisible:
@@ -57,7 +54,7 @@ def save_xlsx(to_save: Dict[str, int], path: str):
     ws.update_index(2, 2, "Bodies")
     ws.update_index(2, 3, "Counts")
     ws.update_index(2, 4, "Material")
-    ws.update_index(2, 5, "Mass")
+    ws.update_index(2, 5, "Mass [kg]")
 
     keys = list(to_save.keys())
     keys.sort()
@@ -70,6 +67,21 @@ def save_xlsx(to_save: Dict[str, int], path: str):
 
     pylightxl.writexl(db, path)
 
+def count_in_component(comp: adsk.fusion.Component) -> Dict[object, int]:
+    """Counts body occurences within component"""
+    return count_unique(comp.bRepBodies)
+
+def count_in_components(comps: List[adsk.fusion.Component]) -> Dict[object, int]:
+    """Counts body occurences within each component in input list"""
+    res = dict()
+    for comp in comps:
+        for k, v in count_in_component(comp).items():
+            if k in res:
+                res[k]["count"] += v["count"]
+            else:
+                res[k] = v
+    return res
+
 def run(context):
     ui = None
     try:
@@ -77,7 +89,6 @@ def run(context):
         ui: adsk.core.UserInterface  = app.userInterface
         product: adsk.core.Product = app.activeProduct
         design = adsk.fusion.Design.cast(product)
-        rootComp = design.rootComponent
 
         fileDialog = ui.createFileDialog()
         fileDialog.title = "Select output directory"
@@ -90,8 +101,7 @@ def run(context):
             ui.messageBox("Failed: No output file specified")
             return
 
-        bodies = rootComp.bRepBodies
-        unique = count_unique(bodies)
+        unique = count_in_components(design.allComponents)
 
         save_xlsx(unique, output_dir)
 
