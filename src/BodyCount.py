@@ -3,6 +3,7 @@
 
 import adsk.core, adsk.fusion, adsk.cam, traceback
 from .extras.classes import Count
+# import extras.classes.Count as Count
 
 from typing import List, Dict
 
@@ -13,6 +14,7 @@ def run(context):
         ui: adsk.core.UserInterface  = app.userInterface
         product: adsk.core.Product = app.activeProduct
         design = adsk.fusion.Design.cast(product)
+        rootComp = design.rootComponent
 
         fileDialog = ui.createFileDialog()
         fileDialog.title = "Select output directory"
@@ -25,7 +27,7 @@ def run(context):
             return
 
         unique = Count()
-        unique += design.allComponents
+        unique += rootComp.occurrences.asList
         unique.save_xlsx(output_dir)
 
     except:

@@ -41,6 +41,7 @@ class Count(object):
     """Holds count of several bodies"""
 
     _counts: Dict[str, CountObject]
+    _components_iterated_through: set = set()
     _re_extract_name: re.Pattern
     
     def __init__(self):
@@ -95,16 +96,22 @@ class Count(object):
         elif type(other) == adsk.fusion.BRepBodies:
             for body in other:
                 self += body
+                
+        # Add OccurrenceList to Count
+        elif type(other) == adsk.fusion.OccurrenceList:
+            for occ in other:
+                self += occ
+        
+        # Add Occurrence to Count
+        elif type(other) == adsk.fusion.Occurrence:
+            self += other.childOccurrences
+            if other.isVisible:
+                self += other.component
 
         # Add Component to Count
         elif type(other) == adsk.fusion.Component:
             if other.isBodiesFolderLightBulbOn:
                 self += other.bRepBodies
-        
-        # Add Components to Count
-        elif type(other) == adsk.fusion.Components:
-            for comp in other:
-                self += comp
 
         else:
             raise ValueError(f"Invalid type {type(other)} of {other}")
