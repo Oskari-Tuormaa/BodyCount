@@ -41,7 +41,6 @@ class Count(object):
     """Holds count of several bodies"""
 
     _counts: Dict[str, CountObject]
-    _components_iterated_through: set = set()
     _re_extract_name: re.Pattern
     
     def __init__(self):
