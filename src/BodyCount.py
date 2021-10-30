@@ -2,9 +2,8 @@
 #Description-
 
 import adsk.core, adsk.fusion, adsk.cam, traceback
-from .extras.classes import Count
-
-from typing import List, Dict
+from .extras.classes import BodyCount, PriceCount
+from .extras.packages import pylightxl
 
 def run(context):
     ui = None
@@ -25,9 +24,23 @@ def run(context):
         if not output_dir:
             return
 
-        unique = Count()
+        # Create DataBase and Worksheet
+        db = pylightxl.Database()
+        db.add_ws("Sheet1")
+        ws: pylightxl.pylightxl.Worksheet = db.ws("Sheet1")
+
+        # Count bodies
+        unique = BodyCount()
         unique += rootComp.occurrences.asList
-        unique.save_xlsx(output_dir)
+        unique.add_to_ws(ws)
+
+        # Count prices
+        prices = PriceCount()
+        prices += rootComp.occurrences.asList
+        prices.add_to_ws(ws)
+
+        # Write file
+        pylightxl.writexl(db, output_dir)
 
     except:
         if ui:
