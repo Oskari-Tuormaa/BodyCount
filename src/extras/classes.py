@@ -141,6 +141,8 @@ class PriceCount(object):
 
     def __init__(self):
         self._prices: Dict[str, PriceObject] = dict()
+        # Regex for removing version number from name
+        self._re_remove_version: re.Pattern = re.compile("^.*?(?=$| v\d*)")
     
     def add_to_ws(self, ws: pylightxl.Worksheet):
         """Saves prices to worksheet"""
@@ -171,10 +173,11 @@ class PriceCount(object):
         
         elif type(other) == adsk.fusion.Component:
             # Add to PriceObject
-            if other.name in self._prices:
-                self._prices[other.name] += other
+            name = self._re_remove_version.findall(other.name)[0].strip()
+            if name in self._prices:
+                self._prices[name] += other
             else:
-                self._prices[other.name] = PriceObject(other)
+                self._prices[name] = PriceObject(other)
 
         else:
             raise ValueError(f"Invalid type {type(other)} of {other}")
