@@ -155,21 +155,19 @@ class PriceCount(object):
         # Add data per Price
         keys = list(self._prices.keys())
         keys.sort()
-        total_price = 0
         for idx, k in enumerate(keys):
             v = self._prices[k]
             ws.update_index(3+idx,  8, k)
             ws.update_index(3+idx,  9, v._price_per)
             ws.update_index(3+idx, 10, v._count)
-            ws.update_index(3+idx, 11, v._price_per*v._count)
-            total_price += v._price_per * v._count
+            ws.update_index(3+idx, 11, f"=I{3+idx}*J{3+idx}")
 
         ws.update_index(5+idx, 10, "Total Price")
         ws.update_index(6+idx, 10, "\w Markup (x1.4)")
         ws.update_index(7+idx, 10, "\w Markup and Moms (x1.75)")
-        ws.update_index(5+idx, 11, total_price)  # Total price
-        ws.update_index(6+idx, 11, total_price*1.4)  # Total price /w markup
-        ws.update_index(7+idx, 11, total_price*1.4*1.25)  # Total price /w markup & moms
+        ws.update_index(5+idx, 11, f"=SUM(K3:K{3+idx})")  # Total price
+        ws.update_index(6+idx, 11, f"=K{5+idx}*1.4")  # Total price /w markup
+        ws.update_index(7+idx, 11, f"=K{6+idx}*1.25")  # Total price /w markup & moms
 
     def __add__(self, other):
         if type(other) == adsk.fusion.OccurrenceList:
