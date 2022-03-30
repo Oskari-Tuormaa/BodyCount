@@ -4,6 +4,9 @@
 import adsk.core, adsk.fusion, adsk.cam, traceback
 from .extras.classes import BodyCount, PriceCount
 from .extras.packages import pylightxl
+from pathlib import Path
+
+log_dir = Path(Path(__file__).parent, "logs")
 
 def run(context):
     ui = None
@@ -23,6 +26,9 @@ def run(context):
 
         if not output_dir:
             return
+
+        # Create log directory
+        log_dir.mkdir(exist_ok=True)
 
         # Create DataBase and Worksheet
         db = pylightxl.Database()
@@ -45,3 +51,6 @@ def run(context):
     except:
         if ui:
             ui.messageBox('Failed:\n{}'.format(traceback.format_exc()))
+        
+        with open(Path(log_dir, "log.log"), "w+") as fd:
+            fd.write(traceback.format_exc())

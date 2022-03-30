@@ -3,23 +3,26 @@ import re
 from .packages import pylightxl
 
 from typing import List, Dict
+from pathlib import Path
+
+log_dir = Path(Path(__file__).parent.parent, "logs")
 
 
 class CountObject(object):
 
     """Class that holds count of single body"""
-    
+
     def __init__(self, body: adsk.fusion.BRepBody):
         self._count = 1
         self._material = body.material.name
         self._mass = body.physicalProperties.mass
-    
+
     def __add__(self, other):
         # Add two CountObject together
         if type(other) == type(self):
             self._count += other._count
             self._mass += other._mass
-        
+
         # Add BRepBody to CountObject
         elif type(other) == adsk.fusion.BRepBody:
             self._count += 1
@@ -28,7 +31,7 @@ class CountObject(object):
         else:
             raise ValueError(f"Invalid type {type(other)} of {other}")
         return self
-    
+
     def __radd__(self, other):
         return self.__add__(other)
 
@@ -36,7 +39,7 @@ class CountObject(object):
 class BodyCount(object):
 
     """Holds count of several bodies"""
-    
+
     def __init__(self):
         self._counts: Dict[str, CountObject] = dict()
         # Regex for removing duplicate count from body name
@@ -60,7 +63,7 @@ class BodyCount(object):
             ws.update_index(3+idx, 3, v._count)
             ws.update_index(3+idx, 4, v._material)
             ws.update_index(3+idx, 5, v._mass)
-    
+
     def __add__(self, other):
         # Add two Count together
         if type(other) == type(self):
@@ -83,12 +86,12 @@ class BodyCount(object):
         elif type(other) == adsk.fusion.BRepBodies:
             for body in other:
                 self += body
-                
+
         # Add OccurrenceList to Count
         elif type(other) == adsk.fusion.OccurrenceList:
             for occ in other:
                 self += occ
-        
+
         # Add Occurrence to Count
         elif type(other) == adsk.fusion.Occurrence:
             self += other.childOccurrences
@@ -103,7 +106,7 @@ class BodyCount(object):
         else:
             raise ValueError(f"Invalid type {type(other)} of {other}")
         return self
-    
+
     def __radd__(self, other):
         return self.__add__(other)
 
@@ -112,27 +115,23 @@ class PriceObject(object):
 
     """Holds price info for single component"""
 
-    def __init__(self, comp: adsk.fusion.Component):
-        self._count: int = 1
-        try:
-            self._price_per = float(comp.description)
-        except (ValueError, AttributeError):
-            # Description isn't valid price
-            self._price_per = 0
-    
+    def __init__(self, other: adsk.fusion.Occurrence, count=1):
+        self._count: int = count
+        self._price_per = 0
+
+        try:  # Try to use description of component as price
+            self._price_per = float(other.component.description)
+        except (ValueError, AttributeError):  # Description isn't valid price
+            prices = PriceCount()
+            prices += other.childOccurrences
+            self._price_per = prices.total()
+
     def __add__(self, other):
         # Add two PriceObject together
         if type(other) == type(self):
             self._count += other._count
-        
-        # Add Component to PriceObject
-        elif type(other) == adsk.fusion.Component:
-            self._count += 1
-
-        else:
-            raise ValueError(f"Invalid type {type(other)} of {other}")
         return self
-    
+
     def __radd__(self, other):
         return self.__add__(other)
 
@@ -143,7 +142,7 @@ class PriceCount(object):
         self._prices: Dict[str, PriceObject] = dict()
         # Regex for removing version number from name
         self._re_remove_version: re.Pattern = re.compile("^.*?(?=$| v\d+)")
-    
+
     def add_to_ws(self, ws: pylightxl.Worksheet):
         """Saves prices to worksheet"""
 
@@ -152,37 +151,45 @@ class PriceCount(object):
         ws.update_index(2,  9, "Price per")
         ws.update_index(2, 10, "Count")
         ws.update_index(2, 11, "Total price")
-        
+
         # Add data per Price
         keys = list(self._prices.keys())
         keys.sort()
+        total_price = 0
         for idx, k in enumerate(keys):
             v = self._prices[k]
             ws.update_index(3+idx,  8, k)
             ws.update_index(3+idx,  9, v._price_per)
             ws.update_index(3+idx, 10, v._count)
             ws.update_index(3+idx, 11, v._price_per*v._count)
+            total_price += v._price_per * v._count
+
+        ws.update_index(5+idx, 10, "Total Price")
+        ws.update_index(6+idx, 10, "\w Markup (x1.4)")
+        ws.update_index(7+idx, 10, "\w Markup and Moms (x1.75)")
+        ws.update_index(5+idx, 11, total_price)  # Total price
+        ws.update_index(6+idx, 11, total_price*1.4)  # Total price /w markup
+        ws.update_index(7+idx, 11, total_price*1.4*1.25)  # Total price /w markup & moms
 
     def __add__(self, other):
         if type(other) == adsk.fusion.OccurrenceList:
             for occ in other:
-                self += occ
-        
-        elif type(other) == adsk.fusion.Occurrence:
-            self += other.component
-        
-        elif type(other) == adsk.fusion.Component:
-            if other.isBodiesFolderLightBulbOn:
-                # Add to PriceObject
-                name = self._re_remove_version.findall(other.name)[0].strip()
-                if name in self._prices:
-                    self._prices[name] += other
-                else:
-                    self._prices[name] = PriceObject(other)
+                if not occ.isVisible:
+                    continue
 
-        else:
-            raise ValueError(f"Invalid type {type(other)} of {other}")
+                name = self._re_remove_version.findall(occ.component.name)[0].strip()
+                if name in self._prices:  # Skip if component has already been indexed
+                    continue
+
+                n_occ = len([x for x in other if (self._re_remove_version.findall(x.component.name)[0].strip() == name and x.isVisible)])
+                self._prices[name] = PriceObject(occ, n_occ)
         return self
-    
+
     def __radd__(self, other):
         return self.__add__(other)
+
+    def total(self):
+        res = 0
+        for k, v in self._prices.items():
+            res += v._count * v._price_per
+        return res
