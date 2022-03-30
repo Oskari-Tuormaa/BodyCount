@@ -36,9 +36,9 @@ def run(context):
         ws: pylightxl.pylightxl.Worksheet = db.ws("Sheet1")
 
         # Count bodies
-        unique = BodyCount()
-        unique += rootComp.occurrences.asList
-        unique.add_to_ws(ws)
+        # unique = BodyCount()
+        # unique += rootComp.occurrences.asList
+        # unique.add_to_ws(ws)
 
         # Count prices
         prices = PriceCount()

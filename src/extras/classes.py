@@ -115,47 +115,21 @@ class PriceObject(object):
 
     """Holds price info for single component"""
 
-    def __init__(self, other, depth = [0]):
-        with open(Path(log_dir, "output.log"), "a+") as fd:
-            fd.write("\t"*depth[0] + str(type(other)) + " " + str(other.name) + "\n")
-            if type(other) == adsk.fusion.Component:
-                occurrences = other.occurrences.asList
-                if len(occurrences) != 0:
-                    co = occurrences
-                    fd.write("\t"*depth[0] + str(co) + str(len(co)) + "\n")
-            fd.write("\n")
+    def __init__(self, other: adsk.fusion.Occurrence, count=1):
+        self._count: int = count
+        self._price_per = 0
 
-        self._count: int = 1
-        if type(other) == adsk.fusion.Component:
-            try:
-                self._price_per = float(other.description)
-            except (ValueError, AttributeError):
-                other: adsk.fusion.Component = other
-                prices = PriceCount(include_bodies=True)
-                depth[0] += 1
-                prices += other.bRepBodies
-                prices += other.occurrences.asList
-                depth[0] -= 1
-                
-                with open(Path(log_dir, "output.log"), "a+") as fd:
-                    for k, v in prices._prices.items():
-                        fd.write("\t"*depth[0] + k + " " + str(v._count) + " " + str(v._price_per) + "\n")
-                    fd.write("\n")
-
-                self._price_per = sum(x._count * x._price_per for x in prices._prices.values())
-        else:
-            try:
-                self._price_per = float(other.description)
-            except (ValueError, AttributeError):
-                # Description isn't valid price
-                self._price_per = 0
+        try:  # Try to use description of component as price
+            self._price_per = float(other.component.description)
+        except (ValueError, AttributeError):  # Description isn't valid price
+            prices = PriceCount()
+            prices += other.childOccurrences
+            self._price_per = prices.total()
     
     def __add__(self, other):
         # Add two PriceObject together
         if type(other) == type(self):
             self._count += other._count
-        else:
-            self._count += 1
         return self
     
     def __radd__(self, other):
@@ -164,8 +138,7 @@ class PriceObject(object):
 
 class PriceCount(object):
 
-    def __init__(self, include_bodies: bool = False):
-        self.include_bodies = include_bodies
+    def __init__(self):
         self._prices: Dict[str, PriceObject] = dict()
         # Regex for removing version number from name
         self._re_remove_version: re.Pattern = re.compile("^.*?(?=$| v\d+)")
@@ -190,41 +163,24 @@ class PriceCount(object):
             ws.update_index(3+idx, 11, v._price_per*v._count)
 
     def __add__(self, other):
-        if self.include_bodies and type(other) == adsk.fusion.BRepBody:
-            if other.isVisible:
-                # Add to PriceObject
-                name = self._re_remove_version.findall(other.name)[0].strip()
-                if name in self._prices:
-                    self._prices[name] += other
-                else:
-                    self._prices[name] = PriceObject(other)
-
-        elif self.include_bodies and type(other) == adsk.fusion.BRepBodies:
-            for body in other:
-                self += body
-
-        elif type(other) == adsk.fusion.OccurrenceList:
+        if type(other) == adsk.fusion.OccurrenceList:
             for occ in other:
-                self += occ
-        
-        elif type(other) == adsk.fusion.Occurrence:
-            if other.isVisible:
-                self += other.component
-                if self.include_bodies:
-                    self += other.childOccurrences
-        
-        elif type(other) == adsk.fusion.Component:
-            if other.isBodiesFolderLightBulbOn:
-                # Add to PriceObject
-                name = self._re_remove_version.findall(other.name)[0].strip()
-                if name in self._prices:
-                    self._prices[name] += other
-                else:
-                    self._prices[name] = PriceObject(other)
+                if not occ.isVisible:
+                    continue
 
-        else:
-            raise ValueError(f"Invalid type {type(other)} of {other}")
+                name = self._re_remove_version.findall(occ.component.name)[0].strip()
+                if name in self._prices:  # Skip if component has already been indexed
+                    continue
+
+                n_occ = len([x for x in other if (self._re_remove_version.findall(x.component.name)[0].strip() == name and x.isVisible)])
+                self._prices[name] = PriceObject(occ, n_occ)
         return self
     
     def __radd__(self, other):
         return self.__add__(other)
+    
+    def total(self):
+        res = 0
+        for k, v in self._prices.items():
+            res += v._count * v._price_per
+        return res
