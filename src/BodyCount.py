@@ -1,10 +1,15 @@
 #Author-Oskari Tuormaa
 #Description-
 
-import adsk.core, adsk.fusion, adsk.cam, traceback
+from pathlib import Path
+import traceback
+
+import adsk.cam
+import adsk.core
+import adsk.fusion
+
 from .extras.classes import BodyCount, PriceCount
 from .extras.packages import pylightxl
-from pathlib import Path
 
 log_dir = Path(Path(__file__).parent, "logs")
 
