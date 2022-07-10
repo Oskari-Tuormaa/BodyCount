@@ -179,11 +179,11 @@ class PriceCount(object):
         for idx, k in enumerate(keys):
             v = self._prices[k]
             count_ws.update_index(3+idx,  8, k)
-            count_ws.update_index(3+idx, 10, v._price_per)
-            count_ws.update_index(3+idx, 11, v._count)
+            count_ws.update_index(3+idx, 10, int(v._price_per))
+            count_ws.update_index(3+idx, 11, int(v._count))
             count_ws.update_index(3+idx, 12, f"=J{3+idx}*K{3+idx}")
-            count_ws.update_index(3+idx, 13, f"=L{3+idx}*1.4")
-            count_ws.update_index(3+idx, 14, f"=M{3+idx}*1.25")
+            count_ws.update_index(3+idx, 13, f"=ROUND(L{3+idx}*1.4)")
+            count_ws.update_index(3+idx, 14, f"=ROUND(M{3+idx}*1.25)")
 
             row = 3+idx
             calc_ws.update_index(row, 2, f"=Counts!H{row}")
