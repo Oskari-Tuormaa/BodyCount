@@ -17,7 +17,7 @@ def run(context):
     ui = None
     try:
         app: adsk.core.Application = adsk.core.Application.get()
-        ui: adsk.core.UserInterface  = app.userInterface
+        ui: adsk.core.UserInterface | None = app.userInterface
         product: adsk.core.Product = app.activeProduct
         design = adsk.fusion.Design.cast(product)
         rootComp = design.rootComponent
