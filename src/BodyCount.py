@@ -37,8 +37,9 @@ def run(context):
 
         # Create DataBase and Worksheet
         db = pylightxl.Database()
-        db.add_ws("Sheet1")
-        ws: pylightxl.pylightxl.Worksheet = db.ws("Sheet1")
+        db.add_ws("Counts")
+        db.add_ws("Calculations")
+        ws: pylightxl.pylightxl.Worksheet = db.ws("Counts")
 
         # Count bodies
         unique = BodyCount()
@@ -48,7 +49,7 @@ def run(context):
         # Count prices
         prices = PriceCount()
         prices += rootComp.occurrences.asList
-        prices.add_to_ws(ws)
+        prices.add_to_db(db)
 
         # Write file
         pylightxl.writexl(db, output_dir)

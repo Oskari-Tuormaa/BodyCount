@@ -143,45 +143,72 @@ class PriceCount(object):
         # Regex for removing version number from name
         self._re_remove_version: re.Pattern = re.compile(r"^.*?(?=$| v\d+)")
 
-    def add_to_db(self, ws: pylightxl.Worksheet):
+    def add_to_db(self, db: pylightxl.Database):
         """Saves prices to worksheet"""
+        count_ws = db.ws("Counts")
+        calc_ws = db.ws("Calculations")
 
         # Populate headers
-        ws.update_index(2,  8, "Modules")
-        ws.update_index(2,  9, "Category")
-        ws.update_index(2, 10, "Price per")
-        ws.update_index(2, 11, "Count")
-        ws.update_index(2, 12, "Cost")
-        ws.update_index(2, 13, "Price ex. VAT")
-        ws.update_index(2, 14, "Price incl. VAT")
+        count_ws.update_index(2,  8, "Modules")
+        count_ws.update_index(2,  9, "Category")
+        count_ws.update_index(2, 10, "Price per")
+        count_ws.update_index(2, 11, "Count")
+        count_ws.update_index(2, 12, "Cost")
+        count_ws.update_index(2, 13, "Price ex. VAT")
+        count_ws.update_index(2, 14, "Price incl. VAT")
+        count_ws.update_index(2, 16, "Installation type")
+        count_ws.update_index(2, 17, "Price per")
+        calc_ws.update_index(2, 2, "Module")
+        calc_ws.update_index(2, 3, "Count")
+        calc_ws.update_index(2, 4, "Installation type")
+        calc_ws.update_index(2, 5, "Price")
+
+        # Set installation types and headers
+        count_ws.update_index(3, 16, "CA")
+        count_ws.update_index(3, 17, "2200")
+        count_ws.update_index(4, 16, "Li")
+        count_ws.update_index(4, 17, "1500")
+        count_ws.update_index(5, 16, "Is")
+        count_ws.update_index(5, 17, "1800")
+        count_ws.update_index(6, 16, "default")
+        count_ws.update_index(6, 17, "0")
 
         # Add data per Price
         keys = list(self._prices.keys())
         keys.sort()
         for idx, k in enumerate(keys):
             v = self._prices[k]
-            ws.update_index(3+idx,  8, k)
-            ws.update_index(3+idx, 10, v._price_per)
-            ws.update_index(3+idx, 11, v._count)
-            ws.update_index(3+idx, 12, f"=J{3+idx}*K{3+idx}")
-            ws.update_index(3+idx, 13, f"=L{3+idx}*1.4")
-            ws.update_index(3+idx, 14, f"=M{3+idx}*1.25")
+            count_ws.update_index(3+idx,  8, k)
+            count_ws.update_index(3+idx, 10, v._price_per)
+            count_ws.update_index(3+idx, 11, v._count)
+            count_ws.update_index(3+idx, 12, f"=J{3+idx}*K{3+idx}")
+            count_ws.update_index(3+idx, 13, f"=L{3+idx}*1.4")
+            count_ws.update_index(3+idx, 14, f"=M{3+idx}*1.25")
+
+            row = 3+idx
+            calc_ws.update_index(row, 2, f"=Counts!H{row}")
+            calc_ws.update_index(row, 3, f"=Counts!K{row}")
+            calc_ws.update_index(row, 4, f"=MID(B{row}, FIND(\"-\", B{row})+1, 2)")
+            calc_ws.update_index(row, 5, f"=LOOKUP(D{row}, Counts!P3:P100, Counts!Q3:Q100)*C{row}")
 
         n_modules = len(keys)
         categories = ["String 1", "String 2", "String 3", "Island", "Custom"]
         for idx, c in enumerate(categories):
             de_row = 2+n_modules # Data End row
             row = 3+idx+n_modules # Current row
-            ws.update_index(row, 11, c)
-            ws.update_index(row, 12, fr"=SUMIF(I3:I{de_row},K{row},L3:L{de_row})")
-            ws.update_index(row, 13, fr"=SUMIF(I3:I{de_row},K{row},M3:M{de_row})")
-            ws.update_index(row, 14, fr"=SUMIF(I3:I{de_row},K{row},N3:N{de_row})")
+            count_ws.update_index(row, 11, c)
+            count_ws.update_index(row, 12, fr"=SUMIF(I3:I{de_row},K{row},L3:L{de_row})")
+            count_ws.update_index(row, 13, fr"=SUMIF(I3:I{de_row},K{row},M3:M{de_row})")
+            count_ws.update_index(row, 14, fr"=SUMIF(I3:I{de_row},K{row},N3:N{de_row})")
 
         row = 3+n_modules+len(categories)
-        ws.update_index(row, 11, "Total")
-        ws.update_index(row, 12, f"=SUM(L{row-len(categories)}:L{row-1})")
-        ws.update_index(row, 13, f"=SUM(M{row-len(categories)}:M{row-1})")
-        ws.update_index(row, 14, f"=SUM(N{row-len(categories)}:N{row-1})")
+        count_ws.update_index(row, 11, "Total")
+        count_ws.update_index(row, 12, f"=SUM(L{row-len(categories)}:L{row-1})")
+        count_ws.update_index(row, 13, f"=SUM(M{row-len(categories)}:M{row-1})")
+        count_ws.update_index(row, 14, f"=SUM(N{row-len(categories)}:N{row-1})")
+        row += 1
+        count_ws.update_index(row, 11, "Total Installation")
+        count_ws.update_index(row, 12, f"=SUM(Calculations!E3:E{3+n_modules})")
 
     def __add__(self, other):
         if type(other) == adsk.fusion.OccurrenceList:
