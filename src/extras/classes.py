@@ -1,9 +1,23 @@
 import adsk.core, adsk.fusion, adsk.cam, traceback
 import re
-from .packages import pylightxl
 
 from typing import List, Dict
 from pathlib import Path
+
+import importlib
+import os, sys
+packagepath = os.path.join(os.path.dirname(sys.argv[0]), 'Lib/site-packages/')
+if packagepath not in sys.path:
+    sys.path.append(packagepath)
+
+# Install and import xlsxwriter
+try:
+    importlib.import_module("xlsxwriter")
+except ImportError:
+    import pip
+    pip.main(["install", "xlsxwriter"])
+finally:
+    globals()["xw"] = importlib.import_module("xlsxwriter")
 
 log_dir = Path(Path(__file__).parent.parent, "logs")
 
@@ -45,24 +59,24 @@ class BodyCount(object):
         # Regex for removing duplicate count from body name
         self._re_extract_name: re.Pattern = re.compile("^.*?(?=$|\(.*?\))")
 
-    def add_to_ws(self, ws: pylightxl.Worksheet):
+    def add_to_ws(self, ws: xw.workbook.Worksheet):
         """Saves count to worksheet"""
 
         # Populate headers
-        ws.update_index(2,  2, "Body")
-        ws.update_index(2,  3, "Count")
-        ws.update_index(2,  4, "Material")
-        ws.update_index(2,  5, "Mass [kg]")
+        ws.write(1,  1, "Body")
+        ws.write(1,  2, "Count")
+        ws.write(1,  3, "Material")
+        ws.write(1,  4, "Mass [kg]")
 
         # Add data per BRepBody
         keys = list(self._counts.keys())
         keys.sort()
         for idx, k in enumerate(keys):
             v = self._counts[k]
-            ws.update_index(3+idx, 2, k)
-            ws.update_index(3+idx, 3, v._count)
-            ws.update_index(3+idx, 4, v._material)
-            ws.update_index(3+idx, 5, v._mass)
+            ws.write(2+idx, 1, k)
+            ws.write(2+idx, 2, v._count)
+            ws.write(2+idx, 3, v._material)
+            ws.write(2+idx, 4, v._mass)
 
     def __add__(self, other):
         # Add two Count together
@@ -143,72 +157,100 @@ class PriceCount(object):
         # Regex for removing version number from name
         self._re_remove_version: re.Pattern = re.compile(r"^.*?(?=$| v\d+)")
 
-    def add_to_db(self, db: pylightxl.Database):
+    def add_to_db(self, wb: xw.Workbook):
         """Saves prices to worksheet"""
-        count_ws = db.ws("Counts")
-        calc_ws = db.ws("Calculations")
+        count_ws: xw.workbook.Worksheet = wb.get_worksheet_by_name("Counts")
+        calc_ws : xw.workbook.Worksheet = wb.get_worksheet_by_name("Calculations")
 
         # Populate headers
-        count_ws.update_index(2,  8, "Modules")
-        count_ws.update_index(2,  9, "Category")
-        count_ws.update_index(2, 10, "Price per")
-        count_ws.update_index(2, 11, "Count")
-        count_ws.update_index(2, 12, "Cost")
-        count_ws.update_index(2, 13, "Price ex. VAT")
-        count_ws.update_index(2, 14, "Price incl. VAT")
-        count_ws.update_index(2, 16, "Installation type")
-        count_ws.update_index(2, 17, "Price per")
-        calc_ws.update_index(2, 2, "Module")
-        calc_ws.update_index(2, 3, "Count")
-        calc_ws.update_index(2, 4, "Installation type")
-        calc_ws.update_index(2, 5, "Price")
+        count_ws.write(1,  7, "Modules")
+        count_ws.write(1,  8, "Category")
+        count_ws.write(1,  9, "Price per")
+        count_ws.write(1, 10, "Count")
+        count_ws.write(1, 11, "Cost")
+        count_ws.write(1, 12, "Price ex. VAT")
+        count_ws.write(1, 13, "Price incl. VAT")
+        count_ws.write(1, 15, "Installation type")
+        count_ws.write(1, 16, "Price per")
+        count_ws.write(1, 18, "Category")
+        count_ws.write(1, 19, "Abbreviation")
+        calc_ws .write(1,  1, "Module")
+        calc_ws .write(1,  2, "Count")
+        calc_ws .write(1,  3, "Installation type")
+        calc_ws .write(1,  4, "Price")
 
         # Set installation types and headers
-        count_ws.update_index(3, 16, "CA")
-        count_ws.update_index(3, 17, "2200")
-        count_ws.update_index(4, 16, "Li")
-        count_ws.update_index(4, 17, "1500")
-        count_ws.update_index(5, 16, "Is")
-        count_ws.update_index(5, 17, "1800")
-        count_ws.update_index(6, 16, "default")
-        count_ws.update_index(6, 17, "0")
+        count_ws.write(2, 15, "CA")
+        count_ws.write(2, 16, "2200")
+        count_ws.write(3, 15, "Li")
+        count_ws.write(3, 16, "1500")
+        count_ws.write(4, 15, "Is")
+        count_ws.write(4, 16, "1800")
+        count_ws.write(5, 15, "default")
+        count_ws.write(5, 16, "0")
+
+        # Set Category abbreviations
+        abbreviations = {
+            "String 1": "S1",
+            "String 2": "S2",
+            "String 3": "S3",
+            "Island": "I",
+            "Custom": "C",
+        }
+        for i, (cat, abbr) in enumerate(abbreviations.items()):
+            count_ws.write(2+i, 18, cat)
+            count_ws.write(2+i, 19, abbr)
 
         # Add data per Price
         keys = list(self._prices.keys())
         keys.sort()
         for idx, k in enumerate(keys):
             v = self._prices[k]
-            count_ws.update_index(3+idx,  8, k)
-            count_ws.update_index(3+idx, 10, int(v._price_per))
-            count_ws.update_index(3+idx, 11, int(v._count))
-            count_ws.update_index(3+idx, 12, f"=J{3+idx}*K{3+idx}")
-            count_ws.update_index(3+idx, 13, f"=ROUND(L{3+idx}*1.4)")
-            count_ws.update_index(3+idx, 14, f"=ROUND(M{3+idx}*1.25)")
+            count_ws.write(2+idx,  7, k)
+            count_ws.write(2+idx,  9, int(v._price_per))
+            count_ws.write(2+idx, 10, int(v._count))
+            count_ws.write(2+idx, 11, f"=J{3+idx}*K{3+idx}")
+            count_ws.write(2+idx, 12, f"=ROUND(L{3+idx}*1.4)")
+            count_ws.write(2+idx, 13, f"=ROUND(M{3+idx}*1.25)")
 
-            row = 3+idx
-            calc_ws.update_index(row, 2, f"=Counts!H{row}")
-            calc_ws.update_index(row, 3, f"=Counts!K{row}")
-            calc_ws.update_index(row, 4, f"=MID(B{row}, FIND(\"-\", B{row})+1, 2)")
-            calc_ws.update_index(row, 5, f"=LOOKUP(D{row}, Counts!P3:P100, Counts!Q3:Q100)*C{row}")
+            row = 2+idx
+            calc_ws.write(row, 1, f"=Counts!H{row+1}")
+            calc_ws.write(row, 2, f"=Counts!K{row+1}")
+            calc_ws.write(row, 3, f"=MID(B{row+1}, FIND(\"-\", B{row+1})+1, 2)")
+            calc_ws.write(row, 4, f"=LOOKUP(D{row+1}, Counts!P3:P100, Counts!Q3:Q100)*C{row+1}")
 
         n_modules = len(keys)
         categories = ["String 1", "String 2", "String 3", "Island", "Custom"]
         for idx, c in enumerate(categories):
             de_row = 2+n_modules # Data End row
-            row = 3+idx+n_modules # Current row
-            count_ws.update_index(row, 11, c)
-            count_ws.update_index(row, 12, fr"=SUMIF(I3:I{de_row},K{row},L3:L{de_row})")
-            count_ws.update_index(row, 13, fr"=SUMIF(I3:I{de_row},K{row},M3:M{de_row})")
-            count_ws.update_index(row, 14, fr"=SUMIF(I3:I{de_row},K{row},N3:N{de_row})")
+            abbr_row = 3+idx
+            row = 2+idx+n_modules # Current row
 
-        row = 3+n_modules+len(categories)
-        count_ws.update_index(row, 11, "Total")
-        count_ws.update_index(row, 12, f"=SUM(L{row-len(categories)}:L{row-1})")
-        count_ws.update_index(row, 13, f"=SUM(M{row-len(categories)}:M{row-1})")
-        count_ws.update_index(row, 14, f"=SUM(N{row-len(categories)}:N{row-1})")
+            cat = f"K{row+1}"
+            abbr = f"T{abbr_row}"
+            cats = f"I3:I{de_row}"
+            costs = f"L3:L{de_row}"
+            costs_excl_vat = f"M3:M{de_row}"
+            costs_incl_vat = f"N3:N{de_row}"
+
+            count_ws.write(row, 10, c)
+            count_ws.write_array_formula(row, 11, row, 11,
+                    fr"{{=SUM(IF(({cats} = {cat}) + ({cats} = {abbr}), {costs}, 0))}}")
+            count_ws.write_array_formula(row, 12, row, 12,
+                    fr"{{=SUM(IF(({cats} = {cat}) + ({cats} = {abbr}), {costs_excl_vat}, 0))}}")
+            count_ws.write_array_formula(row, 13, row, 13,
+                    fr"{{=SUM(IF(({cats} = {cat}) + ({cats} = {abbr}), {costs_incl_vat}, 0))}}")
+
+        bold_format = wb.add_format()
+        bold_format.set_bold()
+        row = 2+n_modules+len(categories)
+        count_ws.write(row, 10, "Total")
+        count_ws.write(row, 11, f"=SUM(L{row-len(categories)}:L{row-1})")
+        count_ws.write(row, 12, f"=SUM(M{row-len(categories)}:M{row-1})")
+        count_ws.write(row, 13, f"=SUM(N{row-len(categories)}:N{row-1})")
         row += 1
-        count_ws.update_index(row, 11, "Total Installation")
-        count_ws.update_index(row, 12, f"=SUM(Calculations!E3:E{3+n_modules})")
+        count_ws.write(row, 10, "Total Installation")
+        count_ws.write(row, 11, f"=SUM(Calculations!E3:E{3+n_modules})")
 
     def __add__(self, other):
         if type(other) == adsk.fusion.OccurrenceList:

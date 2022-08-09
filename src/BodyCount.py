@@ -9,7 +9,22 @@ import adsk.core
 import adsk.fusion
 
 from .extras.classes import BodyCount, PriceCount
-from .extras.packages import pylightxl
+
+# Setup proper path for installed packages
+import importlib
+import os, sys
+packagepath = os.path.join(os.path.dirname(sys.argv[0]), 'Lib/site-packages/')
+if packagepath not in sys.path:
+    sys.path.append(packagepath)
+
+# Install and import xlsxwriter
+try:
+    importlib.import_module("xlsxwriter")
+except ImportError:
+    import pip
+    pip.main(["install", "xlsxwriter"])
+finally:
+    globals()["xw"] = importlib.import_module("xlsxwriter")
 
 log_dir = Path(Path(__file__).parent, "logs")
 
@@ -36,23 +51,23 @@ def run(context):
         log_dir.mkdir(exist_ok=True)
 
         # Create DataBase and Worksheet
-        db = pylightxl.Database()
-        db.add_ws("Counts")
-        db.add_ws("Calculations")
-        ws: pylightxl.pylightxl.Worksheet = db.ws("Counts")
+        wb = xw.Workbook(output_dir)
+        ws_counts = wb.add_worksheet("Counts")
+        ws_calc = wb.add_worksheet("Calculations")
 
         # Count bodies
         unique = BodyCount()
         unique += rootComp.occurrences.asList
-        unique.add_to_ws(ws)
+        unique.add_to_ws(ws_counts)
 
         # Count prices
         prices = PriceCount()
         prices += rootComp.occurrences.asList
-        prices.add_to_db(db)
+        prices.add_to_db(wb)
 
         # Write file
-        pylightxl.writexl(db, output_dir)
+        # pylightxl.writexl(wb, output_dir)
+        wb.close()
 
     except:
         if ui:
