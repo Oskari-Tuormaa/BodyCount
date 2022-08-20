@@ -12,7 +12,7 @@ if packagepath not in sys.path:
 
 # Install and import xlsxwriter
 try:
-    importlib.import_module("xlsxwriter")
+    import xlsxwriter as xw
 except ImportError:
     import pip
     pip.main(["install", "xlsxwriter"])
@@ -161,96 +161,139 @@ class PriceCount(object):
         """Saves prices to worksheet"""
         count_ws: xw.workbook.Worksheet = wb.get_worksheet_by_name("Counts")
         calc_ws : xw.workbook.Worksheet = wb.get_worksheet_by_name("Calculations")
+        indesign_ws : xw.workbook.Worksheet = wb.get_worksheet_by_name("InDesign")
 
         # Populate headers
         count_ws.write(1,  7, "Modules")
         count_ws.write(1,  8, "Category")
         count_ws.write(1,  9, "Price per")
-        count_ws.write(1, 10, "Count")
-        count_ws.write(1, 11, "Cost")
-        count_ws.write(1, 12, "Price ex. VAT")
-        count_ws.write(1, 13, "Price incl. VAT")
-        count_ws.write(1, 15, "Installation type")
-        count_ws.write(1, 16, "Price per")
-        count_ws.write(1, 18, "Category")
-        count_ws.write(1, 19, "Abbreviation")
+        count_ws.write(1, 10, "Price ex. VAT")
+        count_ws.write(1, 11, "Price incl. VAT")
+        count_ws.write(1, 13, "Installation type")
+        count_ws.write(1, 14, "Price per")
+        count_ws.write(1, 16, "Category")
+        count_ws.write(1, 17, "Abbreviation")
         calc_ws .write(1,  1, "Module")
-        calc_ws .write(1,  2, "Count")
-        calc_ws .write(1,  3, "Installation type")
-        calc_ws .write(1,  4, "Price")
+        calc_ws .write(1,  2, "Installation type")
+        calc_ws .write(1,  3, "Price")
 
         # Set installation types and headers
-        count_ws.write(2, 15, "CA")
-        count_ws.write(2, 16, "2200")
-        count_ws.write(3, 15, "Li")
-        count_ws.write(3, 16, "1500")
-        count_ws.write(4, 15, "Is")
-        count_ws.write(4, 16, "1800")
-        count_ws.write(5, 15, "default")
-        count_ws.write(5, 16, "0")
+        count_ws.write(2, 13, "CA")
+        count_ws.write(2, 14, "2200")
+        count_ws.write(3, 13, "Li")
+        count_ws.write(3, 14, "1500")
+        count_ws.write(4, 13, "Is")
+        count_ws.write(4, 14, "1800")
+        count_ws.write(5, 13, "default")
+        count_ws.write(5, 14, "0")
 
         # Set Category abbreviations
-        abbreviations = {
+        categories = {
             "String 1": "S1",
             "String 2": "S2",
             "String 3": "S3",
             "Island": "I",
             "Custom": "C",
         }
-        for i, (cat, abbr) in enumerate(abbreviations.items()):
-            count_ws.write(2+i, 18, cat)
-            count_ws.write(2+i, 19, abbr)
+        for i, (cat, abbr) in enumerate(categories.items()):
+            count_ws.write(2+i, 16, cat)
+            count_ws.write(2+i, 17, abbr)
+
+        n_extra = 5
 
         # Add data per Price
-        keys = list(self._prices.keys())
-        keys.sort()
-        for idx, k in enumerate(keys):
-            v = self._prices[k]
-            count_ws.write(2+idx,  7, k)
-            count_ws.write(2+idx,  9, int(v._price_per))
-            count_ws.write(2+idx, 10, int(v._count))
-            count_ws.write(2+idx, 11, f"=J{3+idx}*K{3+idx}")
-            count_ws.write(2+idx, 12, f"=ROUND(L{3+idx}*1.4)")
-            count_ws.write(2+idx, 13, f"=ROUND(M{3+idx}*1.25)")
+        modules = list(self._prices.keys())
+        modules.sort()
+        row_modules_end = 2
+        for mod in modules + [""]*n_extra:
+            v = self._prices.get(mod)
 
-            row = 2+idx
-            calc_ws.write(row, 1, f"=Counts!H{row+1}")
-            calc_ws.write(row, 2, f"=Counts!K{row+1}")
-            calc_ws.write(row, 3, f"=MID(B{row+1}, FIND(\"-\", B{row+1})+1, 2)")
-            calc_ws.write(row, 4, f"=LOOKUP(D{row+1}, Counts!P3:P100, Counts!Q3:Q100)*C{row+1}")
+            n = 1 if v is None else v._count
+            per = 0 if v is None else v._price_per
 
-        n_modules = len(keys)
-        categories = ["String 1", "String 2", "String 3", "Island", "Custom"]
-        for idx, c in enumerate(categories):
-            de_row = 2+n_modules # Data End row
+            for i in range(n):
+                count_ws.write(row_modules_end,  7, mod)
+                count_ws.write(row_modules_end,  9, int(per))
+                count_ws.write(row_modules_end, 10, f"=ROUND(J{row_modules_end+1}*1.4)")
+                count_ws.write(row_modules_end, 11, f"=ROUND(K{row_modules_end+1}*1.25)")
+
+                calc_ws.write(row_modules_end, 1, f"=Counts!H{row_modules_end+1}")
+                calc_ws.write(row_modules_end, 2, f"=IFERROR(MID(B{row_modules_end+1}, FIND(\"-\", B{row_modules_end+1})+1, 2),\"\")")
+                calc_ws.write(row_modules_end, 3, f"=IFERROR(LOOKUP(C{row_modules_end+1}, Counts!N3:N100, Counts!O3:O100), 0)")
+                row_modules_end += 1
+
+        n_modules = len(modules)+n_extra
+        for idx, c in enumerate(categories.keys()):
+            de_row = row_modules_end
             abbr_row = 3+idx
-            row = 2+idx+n_modules # Current row
+            row = idx+de_row
 
-            cat = f"K{row+1}"
-            abbr = f"T{abbr_row}"
+            cat = f"I{row+1}"
+            abbr = f"R{abbr_row}"
             cats = f"I3:I{de_row}"
-            costs = f"L3:L{de_row}"
-            costs_excl_vat = f"M3:M{de_row}"
-            costs_incl_vat = f"N3:N{de_row}"
+            costs = f"J3:J{de_row}"
+            costs_excl_vat = f"K3:K{de_row}"
+            costs_incl_vat = f"L3:L{de_row}"
 
-            count_ws.write(row, 10, c)
-            count_ws.write_array_formula(row, 11, row, 11,
+            count_ws.write(row, 8, c)
+            count_ws.write_array_formula(row, 9, row, 9,
                     fr"{{=SUM(IF(({cats} = {cat}) + ({cats} = {abbr}), {costs}, 0))}}")
-            count_ws.write_array_formula(row, 12, row, 12,
+            count_ws.write_array_formula(row, 10, row, 10,
                     fr"{{=SUM(IF(({cats} = {cat}) + ({cats} = {abbr}), {costs_excl_vat}, 0))}}")
-            count_ws.write_array_formula(row, 13, row, 13,
+            count_ws.write_array_formula(row, 11, row, 11,
                     fr"{{=SUM(IF(({cats} = {cat}) + ({cats} = {abbr}), {costs_incl_vat}, 0))}}")
 
-        bold_format = wb.add_format()
-        bold_format.set_bold()
-        row = 2+n_modules+len(categories)
-        count_ws.write(row, 10, "Total")
-        count_ws.write(row, 11, f"=SUM(L{row-len(categories)}:L{row-1})")
-        count_ws.write(row, 12, f"=SUM(M{row-len(categories)}:M{row-1})")
-        count_ws.write(row, 13, f"=SUM(N{row-len(categories)}:N{row-1})")
+        row = row_modules_end+len(categories)
+        count_ws.write(row, 8, "Total")
+        count_ws.write(row, 9, f"=SUM(J{row-len(categories)+1}:J{row})")
+        count_ws.write(row, 10, f"=SUM(K{row-len(categories)+1}:K{row})")
+        count_ws.write(row, 11, f"=SUM(L{row-len(categories)+1}:L{row})")
         row += 1
-        count_ws.write(row, 10, "Total Installation")
-        count_ws.write(row, 11, f"=SUM(Calculations!E3:E{3+n_modules})")
+        count_ws.write(row, 8, "Total Installation")
+        count_ws.write_array_formula(row, 9, row, 9, f"{{=SUM(Calculations!D3:D{3+n_modules}+0)}}")
+
+        # Write category counts
+        ix = 6
+        iy = 1
+        n_raw_modules = row_modules_end - 3
+        for i, cat in enumerate(categories.keys()):
+            calc_ws.write(iy, ix+i, cat)
+
+            abbr = f"Counts!R{3+i}"
+            cats = f"Counts!I3:I{row_modules_end}"
+            mods = f"Counts!H3:H{row_modules_end}"
+            cat_i = f"{chr(71+i)}2"
+            calc_ws.write_array_formula(iy+1, ix+i, iy+1+n_raw_modules, ix+i, fr'{{=IF(({cats}={cat_i})+({cats}={abbr}),{mods},"")}}')
+
+        iy += n_raw_modules + 2
+        ix -= 1
+        for i, k in enumerate(modules + [""]*5):
+            if k == "":
+                k = f"=Counts!H{4+i}"
+            calc_ws.write(iy+i, ix, k)
+            for j, cat in enumerate(categories.keys()):
+                col = chr(71+j)
+                col_range = f"{col}3:{col}{n_raw_modules+3}"
+                mod = f"F{iy+i+1}"
+                calc_ws.write(iy+i, ix+1+j, f"=COUNTIF({col_range},{mod})")
+
+        # Write InDesign sheet
+        stride = n_modules + 2
+        for i, cat in enumerate(categories.keys()):
+            y_top = i * stride
+            indesign_ws.write(y_top, 0, cat)
+
+            col = chr(71+i)
+            mod_range = f"Calculations!F{n_raw_modules+4}:F{n_raw_modules+n_modules+3}"
+            mod_range_2 = f"Counts!H3:H{row_modules_end}"
+            price_per_range = f"Counts!J3:J{row_modules_end}"
+            counts_range = f"Calculations!{col}{n_raw_modules+4}:{col}{n_raw_modules+n_modules+3}"
+            indesign_ws.write_array_formula(y_top, 2, y_top, 2, f"=SUM(IFERROR(C{y_top+2}:C{y_top+n_modules+1}*B{y_top+2}:B{y_top+n_modules+1},0))")
+            indesign_ws.write_array_formula(y_top+1, 0, y_top+n_modules, 0, f'{{=IFERROR(INDEX({mod_range},SMALL(IF({counts_range}<>0,ROW({mod_range})-{n_raw_modules+3}),ROW(1:{n_modules}))), "")}}')
+            for j in range(n_modules):
+                indesign_ws.write(y_top+j+1, 1, f'=IFERROR(LOOKUP(A{y_top+j+2}, {mod_range}, {counts_range}), "")')
+                indesign_ws.write(y_top+j+1, 2, f'=IFERROR(LOOKUP(A{y_top+j+2}, {mod_range_2}, {price_per_range}), "")')
+
 
     def __add__(self, other):
         if type(other) == adsk.fusion.OccurrenceList:

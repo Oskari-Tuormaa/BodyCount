@@ -19,7 +19,8 @@ if packagepath not in sys.path:
 
 # Install and import xlsxwriter
 try:
-    importlib.import_module("xlsxwriter")
+    # importlib.import_module("xlsxwriter")
+    import xlsxwriter as xw
 except ImportError:
     import pip
     pip.main(["install", "xlsxwriter"])
@@ -53,7 +54,8 @@ def run(context):
         # Create DataBase and Worksheet
         wb = xw.Workbook(output_dir)
         ws_counts = wb.add_worksheet("Counts")
-        ws_calc = wb.add_worksheet("Calculations")
+        wb.add_worksheet("Calculations")
+        wb.add_worksheet("InDesign")
 
         # Count bodies
         unique = BodyCount()
