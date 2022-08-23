@@ -274,6 +274,11 @@ class PriceCount(object):
                 mod = f"F{iy+i+1}"
                 calc_ws.write(iy+i, ix+1+j, f"=COUNTIF({col_range},{mod})")
 
+        # Setup InDesign formats
+        format_pcs: xw.workbook.Format = wb.add_format({"num_format": "0 [$pcs.]"})
+        format_price: xw.workbook.Format = wb.add_format({"num_format": "#,##0[$,][$-]"})
+        format_dkk: xw.workbook.Format = wb.add_format({"num_format": "#,##0 [$DKK]"})
+
         # Write InDesign sheet
         stride = n_modules + 2
         for i, cat in enumerate(categories.keys()):
@@ -286,24 +291,24 @@ class PriceCount(object):
             price_per_range = f"Counts!K3:K{row_modules_end}"
             counts_range = f"Calculations!{col}{n_raw_modules+4}:{col}{n_raw_modules+n_modules+3}"
 
-            indesign_ws.write_array_formula(y_top, 2, y_top, 2, f"=SUM(IFERROR(C{y_top+2}:C{y_top+n_modules+1}*B{y_top+2}:B{y_top+n_modules+1},0))")
+            indesign_ws.write_array_formula(y_top, 2, y_top, 2, f"=SUM(IFERROR(C{y_top+2}:C{y_top+n_modules+1}*B{y_top+2}:B{y_top+n_modules+1},0))", format_dkk)
             indesign_ws.write_array_formula(y_top+1, 0, y_top+n_modules, 0, f'{{=IFERROR(INDEX({mod_range},SMALL(IF({counts_range}<>0,ROW({mod_range})-{n_raw_modules+3}),ROW(1:{n_modules}))), "")}}')
             for j in range(n_modules):
-                indesign_ws.write(y_top+j+1, 1, f'=IFERROR(INDEX({counts_range}, MATCH(A{y_top+j+2}, {mod_range}, 0)), "")')
-                indesign_ws.write(y_top+j+1, 2, f'=IFERROR(INDEX({price_per_range}, MATCH(A{y_top+j+2}, {mod_range_2}, 0)), "")')
+                indesign_ws.write(y_top+j+1, 1, f'=IFERROR(INDEX({counts_range}, MATCH(A{y_top+j+2}, {mod_range}, 0)), "")', format_pcs)
+                indesign_ws.write(y_top+j+1, 2, f'=IFERROR(INDEX({price_per_range}, MATCH(A{y_top+j+2}, {mod_range_2}, 0)), "")', format_price)
 
         row = stride * len(categories) + 2
         indesign_ws.write(row, 0, "Total Installation")
-        indesign_ws.write_array_formula(row, 2, row, 2, f"{{=SUM(Calculations!D3:D{3+n_modules}+0)}}")
+        indesign_ws.write_array_formula(row, 2, row, 2, f"{{=SUM(Calculations!D3:D{3+n_modules}+0)}}", format_dkk)
 
         row += 2
         row_totals = row_modules_end+len(categories)+1
         indesign_ws.write(row, 0, "in total ex VAT.")
         indesign_ws.write(row+1, 0, "VAT")
         indesign_ws.write(row+2, 0, "in total incl. VAT")
-        indesign_ws.write(row, 2, f"=Counts!K{row_totals} + C{row-2}")
-        indesign_ws.write(row+1, 2, f"=C{row+3}-C{row+1}")
-        indesign_ws.write(row+2, 2, f"=Counts!L{row_totals} + C{row-2}")
+        indesign_ws.write(row, 2, f"=Counts!K{row_totals} + C{row-2}", format_dkk)
+        indesign_ws.write(row+1, 2, f"=C{row+3}-C{row+1}", format_dkk)
+        indesign_ws.write(row+2, 2, f"=Counts!L{row_totals} + C{row-2}", format_dkk)
 
 
     def __add__(self, other):
