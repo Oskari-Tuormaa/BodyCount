@@ -214,8 +214,8 @@ class PriceCount(object):
             for i in range(n):
                 count_ws.write(row_modules_end,  7, mod)
                 count_ws.write(row_modules_end,  9, int(per))
-                count_ws.write(row_modules_end, 10, f"=ROUND(J{row_modules_end+1}*1,4)")
-                count_ws.write(row_modules_end, 11, f"=ROUND(K{row_modules_end+1}*1,25)")
+                count_ws.write(row_modules_end, 10, f"=ROUND(J{row_modules_end+1}*1.4)")
+                count_ws.write(row_modules_end, 11, f"=ROUND(K{row_modules_end+1}*1.25)")
 
                 calc_ws.write(row_modules_end, 1, f"=Counts!H{row_modules_end+1}")
                 calc_ws.write(row_modules_end, 2, f"=IFERROR(MID(B{row_modules_end+1}, FIND(\"-\", B{row_modules_end+1})+1, 2),\"\")")
@@ -248,9 +248,6 @@ class PriceCount(object):
         count_ws.write(row, 9, f"=SUM(J{row-len(categories)+1}:J{row})")
         count_ws.write(row, 10, f"=SUM(K{row-len(categories)+1}:K{row})")
         count_ws.write(row, 11, f"=SUM(L{row-len(categories)+1}:L{row})")
-        row += 1
-        count_ws.write(row, 8, "Total Installation")
-        count_ws.write_array_formula(row, 9, row, 9, f"{{=SUM(Calculations!D3:D{3+n_modules}+0)}}")
 
         # Write category counts
         ix = 6
@@ -286,13 +283,27 @@ class PriceCount(object):
             col = chr(71+i)
             mod_range = f"Calculations!F{n_raw_modules+4}:F{n_raw_modules+n_modules+3}"
             mod_range_2 = f"Counts!H3:H{row_modules_end}"
-            price_per_range = f"Counts!J3:J{row_modules_end}"
+            price_per_range = f"Counts!K3:K{row_modules_end}"
             counts_range = f"Calculations!{col}{n_raw_modules+4}:{col}{n_raw_modules+n_modules+3}"
+
             indesign_ws.write_array_formula(y_top, 2, y_top, 2, f"=SUM(IFERROR(C{y_top+2}:C{y_top+n_modules+1}*B{y_top+2}:B{y_top+n_modules+1},0))")
             indesign_ws.write_array_formula(y_top+1, 0, y_top+n_modules, 0, f'{{=IFERROR(INDEX({mod_range},SMALL(IF({counts_range}<>0,ROW({mod_range})-{n_raw_modules+3}),ROW(1:{n_modules}))), "")}}')
             for j in range(n_modules):
-                indesign_ws.write(y_top+j+1, 1, f'=IFERROR(LOOKUP(A{y_top+j+2}, {mod_range}, {counts_range}), "")')
-                indesign_ws.write(y_top+j+1, 2, f'=IFERROR(LOOKUP(A{y_top+j+2}, {mod_range_2}, {price_per_range}), "")')
+                indesign_ws.write(y_top+j+1, 1, f'=IFERROR(INDEX({counts_range}, MATCH(A{y_top+j+2}, {mod_range}, 0)), "")')
+                indesign_ws.write(y_top+j+1, 2, f'=IFERROR(INDEX({price_per_range}, MATCH(A{y_top+j+2}, {mod_range_2}, 0)), "")')
+
+        row = stride * len(categories) + 2
+        indesign_ws.write(row, 0, "Total Installation")
+        indesign_ws.write_array_formula(row, 2, row, 2, f"{{=SUM(Calculations!D3:D{3+n_modules}+0)}}")
+
+        row += 2
+        row_totals = row_modules_end+len(categories)+1
+        indesign_ws.write(row, 0, "in total ex VAT.")
+        indesign_ws.write(row+1, 0, "VAT")
+        indesign_ws.write(row+2, 0, "in total incl. VAT")
+        indesign_ws.write(row, 2, f"=Counts!K{row_totals} + C{row-2}")
+        indesign_ws.write(row+1, 2, f"=C{row+3}-C{row+1}")
+        indesign_ws.write(row+2, 2, f"=Counts!L{row_totals} + C{row-2}")
 
 
     def __add__(self, other):
