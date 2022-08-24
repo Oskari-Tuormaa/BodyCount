@@ -214,8 +214,8 @@ class PriceCount(object):
             for i in range(n):
                 count_ws.write(row_modules_end,  7, mod)
                 count_ws.write(row_modules_end,  9, int(per))
-                count_ws.write(row_modules_end, 10, f"=ROUND(J{row_modules_end+1}*1.4)")
-                count_ws.write(row_modules_end, 11, f"=ROUND(K{row_modules_end+1}*1.25)")
+                count_ws.write(row_modules_end, 10, f"=ROUND(J{row_modules_end+1}*1.4, 0)")
+                count_ws.write(row_modules_end, 11, f"=ROUND(K{row_modules_end+1}*1.25, 0)")
 
                 calc_ws.write(row_modules_end, 1, f"=Counts!H{row_modules_end+1}")
                 calc_ws.write(row_modules_end, 2, f"=IFERROR(MID(B{row_modules_end+1}, FIND(\"-\", B{row_modules_end+1})+1, 2),\"\")")
