@@ -275,8 +275,8 @@ class PriceCount(object):
                 calc_ws.write(iy+i, ix+1+j, f"=COUNTIF({col_range},{mod})")
 
         # Setup InDesign formats
-        format_pcs: xw.workbook.Format = wb.add_format({"num_format": "0 [$pcs.]"})
-        format_price: xw.workbook.Format = wb.add_format({"num_format": "#,##0[$,][$-]"})
+        format_pcs: xw.workbook.Format = wb.add_format({"num_format": "#,##0 [$pcs.]"})
+        format_price: xw.workbook.Format = wb.add_format({"num_format": "#,##0.-"})
         format_dkk: xw.workbook.Format = wb.add_format({"num_format": "#,##0 [$DKK]"})
 
         # Write InDesign sheet
