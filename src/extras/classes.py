@@ -179,13 +179,11 @@ class PriceCount(object):
 
         # Set installation types and headers
         count_ws.write(2, 13, "CA")
-        count_ws.write(2, 14, "2200")
+        count_ws.write(2, 14, 2200)
         count_ws.write(3, 13, "Li")
-        count_ws.write(3, 14, "1500")
+        count_ws.write(3, 14, 1500)
         count_ws.write(4, 13, "Is")
-        count_ws.write(4, 14, "1800")
-        count_ws.write(5, 13, "default")
-        count_ws.write(5, 14, "0")
+        count_ws.write(4, 14, 1800)
 
         # Set Category abbreviations
         categories = {
@@ -213,13 +211,14 @@ class PriceCount(object):
 
             for i in range(n):
                 count_ws.write(row_modules_end,  7, mod)
+                count_ws.data_validation(row_modules_end, 8, row_modules_end, 8, {'validate': 'list', 'source': '=$R$3:$R$7'})
                 count_ws.write(row_modules_end,  9, int(per))
                 count_ws.write(row_modules_end, 10, f"=ROUND(J{row_modules_end+1}*1.4, 0)")
                 count_ws.write(row_modules_end, 11, f"=ROUND(K{row_modules_end+1}*1.25, 0)")
 
                 calc_ws.write(row_modules_end, 1, f"=Counts!H{row_modules_end+1}")
                 calc_ws.write(row_modules_end, 2, f"=IFERROR(MID(B{row_modules_end+1}, FIND(\"-\", B{row_modules_end+1})+1, 2),\"\")")
-                calc_ws.write(row_modules_end, 3, f"=IFERROR(LOOKUP(C{row_modules_end+1}, Counts!N3:N100, Counts!O3:O100), 0)")
+                calc_ws.write(row_modules_end, 3, f"=IFERROR(INDEX(Counts!O3:O100, MATCH(C{row_modules_end+1}, Counts!N3:N100)), 0)")
                 row_modules_end += 1
 
         n_modules = len(modules)+n_extra
