@@ -305,9 +305,9 @@ class PriceCount(object):
         indesign_ws.write(row, 0, "in total ex VAT.")
         indesign_ws.write(row+1, 0, "VAT")
         indesign_ws.write(row+2, 0, "in total incl. VAT")
-        indesign_ws.write(row, 2, f"=Counts!K{row_totals} + C{row-2}", format_dkk)
+        indesign_ws.write(row, 2, f"=Counts!K{row_totals} + C{row-1}", format_dkk)
         indesign_ws.write(row+1, 2, f"=C{row+3}-C{row+1}", format_dkk)
-        indesign_ws.write(row+2, 2, f"=Counts!L{row_totals} + C{row-2}", format_dkk)
+        indesign_ws.write(row+2, 2, f"=Counts!L{row_totals} + C{row-1}", format_dkk)
 
 
     def __add__(self, other):
