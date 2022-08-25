@@ -213,7 +213,7 @@ class PriceCount(object):
                 count_ws.write(row_modules_end,  7, mod)
                 count_ws.data_validation(row_modules_end, 8, row_modules_end, 8, {'validate': 'list', 'source': '=$R$3:$R$7'})
                 count_ws.write(row_modules_end,  9, int(per))
-                count_ws.write(row_modules_end, 10, f"=ROUND(J{row_modules_end+1}*1.4, 0)")
+                count_ws.write(row_modules_end, 10, f"=ROUND(J{row_modules_end+1}*1.4 + IF(ISBLANK(H{row_modules_end+1}), 0, 2206), 0)")
                 count_ws.write(row_modules_end, 11, f"=ROUND(K{row_modules_end+1}*1.25, 0)")
 
                 calc_ws.write(row_modules_end, 1, f"=Counts!H{row_modules_end+1}")
