@@ -6,7 +6,7 @@ from pathlib import Path
 
 import importlib
 import os, sys
-packagepath = os.path.join(os.path.dirname(sys.argv[0]), 'Lib/site-packages/')
+packagepath = os.path.join(os.path.dirname(sys.argv[0]), 'Lib', 'site-packages')
 if packagepath not in sys.path:
     sys.path.append(packagepath)
 
