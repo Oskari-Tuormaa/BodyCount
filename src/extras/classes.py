@@ -263,9 +263,13 @@ class PriceCount(object):
 
         iy += n_raw_modules + 2
         ix -= 1
-        for i, k in enumerate(modules + [""]*5):
+        off = 0
+        for i, k in enumerate(modules + [""] * n_extra):
             if k == "":
-                k = f"=Counts!H{4+i}"
+                k = f"=Counts!H{3+off}"
+                off += 1
+            else:
+                off += x._count if (x := self._prices.get(k)) else 0
             calc_ws.write(iy+i, ix, k)
             for j, cat in enumerate(categories.keys()):
                 col = chr(71+j)
