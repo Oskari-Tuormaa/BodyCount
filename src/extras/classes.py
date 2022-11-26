@@ -3,6 +3,7 @@ import re
 
 from typing import List, Dict
 from pathlib import Path
+from .human_sort import human_sort
 
 import importlib
 import os, sys
@@ -70,7 +71,7 @@ class BodyCount(object):
 
         # Add data per BRepBody
         keys = list(self._counts.keys())
-        keys.sort()
+        human_sort(keys)
         for idx, k in enumerate(keys):
             v = self._counts[k]
             ws.write(2+idx, 1, k)
@@ -201,7 +202,7 @@ class PriceCount(object):
 
         # Add data per Price
         modules = list(self._prices.keys())
-        modules.sort()
+        human_sort(modules)
         row_modules_end = 2
         for mod in modules + [""]*n_extra:
             v = self._prices.get(mod)
