@@ -3,10 +3,11 @@ import re
 
 from typing import List, Dict
 from pathlib import Path
+from .human_sort import human_sort
 
 import importlib
 import os, sys
-packagepath = os.path.join(os.path.dirname(sys.argv[0]), 'Lib/site-packages/')
+packagepath = os.path.join(os.path.dirname(sys.argv[0]), 'Lib', 'site-packages')
 if packagepath not in sys.path:
     sys.path.append(packagepath)
 
@@ -70,7 +71,7 @@ class BodyCount(object):
 
         # Add data per BRepBody
         keys = list(self._counts.keys())
-        keys.sort()
+        human_sort(keys)
         for idx, k in enumerate(keys):
             v = self._counts[k]
             ws.write(2+idx, 1, k)
@@ -201,7 +202,7 @@ class PriceCount(object):
 
         # Add data per Price
         modules = list(self._prices.keys())
-        modules.sort()
+        human_sort(modules)
         row_modules_end = 2
         for mod in modules + [""]*n_extra:
             v = self._prices.get(mod)
@@ -263,9 +264,13 @@ class PriceCount(object):
 
         iy += n_raw_modules + 2
         ix -= 1
-        for i, k in enumerate(modules + [""]*5):
+        off = 0
+        for i, k in enumerate(modules + [""] * n_extra):
             if k == "":
-                k = f"=Counts!H{4+i}"
+                k = f"=Counts!H{3+off}"
+                off += 1
+            else:
+                off += x._count if (x := self._prices.get(k)) else 0
             calc_ws.write(iy+i, ix, k)
             for j, cat in enumerate(categories.keys()):
                 col = chr(71+j)
