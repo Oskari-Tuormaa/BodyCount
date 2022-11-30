@@ -19,7 +19,12 @@ def alphanum_key(s):
     ["z", 23, "a"]
 
     """
-    return [tryint(c) for c in re.split("([0-9]+)", s)]
+    key = [tryint(c) for c in re.split("([0-9]+)", s)]
+
+    if len(key) >= 2 and isinstance(key[1], int) and key[1] == 9:
+        key[0] = chr(1000)
+
+    return key
 
 
 def human_sort(l):
