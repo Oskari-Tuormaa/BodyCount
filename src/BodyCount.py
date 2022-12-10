@@ -1,5 +1,5 @@
-#Author-Oskari Tuormaa
-#Description-
+# Author-Oskari Tuormaa
+# Description-
 
 from pathlib import Path
 import traceback
@@ -8,12 +8,14 @@ import adsk.cam
 import adsk.core
 import adsk.fusion
 
-from .extras.classes import BodyCount, PriceCount
+from .extras.classes import add_bodies_to_worksheet, add_components_to_worksheet
+from .extras.human_sort import human_sort
 
 # Setup proper path for installed packages
 import importlib
 import os, sys
-packagepath = os.path.join(os.path.dirname(sys.argv[0]), 'Lib', 'site-packages')
+
+packagepath = os.path.join(os.path.dirname(sys.argv[0]), "Lib", "site-packages")
 if packagepath not in sys.path:
     sys.path.append(packagepath)
 
@@ -23,11 +25,13 @@ try:
     import xlsxwriter as xw
 except ImportError:
     import pip
+
     pip.main(["install", "xlsxwriter"])
 finally:
     globals()["xw"] = importlib.import_module("xlsxwriter")
 
 log_dir = Path(Path(__file__).parent, "logs")
+
 
 def run(context):
     ui = None
@@ -35,7 +39,7 @@ def run(context):
         app: adsk.core.Application = adsk.core.Application.get()
         ui: adsk.core.UserInterface = app.userInterface
         product: adsk.core.Product = app.activeProduct
-        design = adsk.fusion.Design.cast(product)
+        design: adsk.fusion.Design = adsk.fusion.Design.cast(product)
         rootComp = design.rootComponent
 
         fileDialog = ui.createFileDialog()
@@ -51,29 +55,18 @@ def run(context):
         # Create log directory
         log_dir.mkdir(exist_ok=True)
 
-        # Create DataBase and Worksheet
+        # # Create DataBase and Worksheet
         wb = xw.Workbook(output_dir)
-        ws_counts = wb.add_worksheet("Counts")
-        wb.add_worksheet("Calculations")
-        wb.add_worksheet("InDesign")
 
-        # Count bodies
-        unique = BodyCount()
-        unique += rootComp.occurrences.asList
-        unique.add_to_ws(ws_counts)
+        add_bodies_to_worksheet(rootComp, wb)
+        add_components_to_worksheet(rootComp, wb)
 
-        # Count prices
-        prices = PriceCount()
-        prices += rootComp.occurrences.asList
-        prices.add_to_db(wb)
-
-        # Write file
-        # pylightxl.writexl(wb, output_dir)
+        # # Write file
         wb.close()
 
     except:
         if ui:
-            ui.messageBox('Failed:\n{}'.format(traceback.format_exc()))
+            ui.messageBox("Failed:\n{}".format(traceback.format_exc()))
 
         with open(Path(log_dir, "log.log"), "w+") as fd:
             fd.write(traceback.format_exc())
