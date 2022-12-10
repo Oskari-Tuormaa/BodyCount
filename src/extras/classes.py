@@ -56,6 +56,23 @@ def add_bodies_to_worksheet(root: adsk.fusion.Component, wb: xw.Workbook):
         ws.write(2 + i, 4, body.physicalProperties.mass)
     bend = 2 + len(counts)
 
+    # Count FSA
+    counts = {}
+    for occ in traverse_occurrences(root, predicate=lambda x: "FSA" in x.name):
+        name = occ.component.name
+        if name in counts:
+            counts[name][0] += 1
+        else:
+            counts[name] = [1, occ]
+
+    # Add FSA counts
+    keys = list(counts.keys())
+    human_sort(keys)
+    for i, name in enumerate(keys):
+        count, occ = counts[name]
+        ws.write(bend + i, 1, name)
+        ws.write(bend + i, 2, count)
+
 
 def add_components_to_worksheet(root: adsk.fusion.Component, wb: xw.Workbook):
     # Get sheets
