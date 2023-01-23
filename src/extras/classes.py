@@ -113,12 +113,16 @@ def add_components_to_worksheet(root: adsk.fusion.Component, wb: xw.Workbook):
     calc_ws.write(1, 3, "Price")
 
     # Set installation types and headers
-    count_ws.write(2, 13, "CA")
-    count_ws.write(2, 14, 2200)
-    count_ws.write(3, 13, "Li")
-    count_ws.write(3, 14, 1500)
-    count_ws.write(4, 13, "Is")
-    count_ws.write(4, 14, 1800)
+    installation_types = {
+        "CA": 2200,
+        "Li": 1500,
+        "Is": 1800,
+    }
+
+    for i, (type, cost) in enumerate(installation_types.items()):
+        y = 2 + i
+        count_ws.write(y, 13, type)
+        count_ws.write(y, 14, cost)
 
     # Set Category abbreviations
     categories = {
