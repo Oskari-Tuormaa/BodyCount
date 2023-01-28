@@ -87,14 +87,14 @@ def add_components_to_worksheet(root: adsk.fusion.Component, wb: xw.Workbook):
         try:
             return float(occ.component.description)
         except (ValueError, AttributeError):
-            return sum(get_price(other) for other in occ.childOccurrences)
+            return sum(get_price(other) for other in occ.childOccurrences if other.isLightBulbOn)
 
     # Get prices
     prices = {}
     for occ in traverse_occurrences(root, depth=0):
         name = occ.component.name
         if name in prices:
-            prices[name][0] += 1
+            prices[name][0] += occ.isLightBulbOn
         else:
             prices[name] = [1, get_price(occ)]
 
@@ -117,11 +117,15 @@ def add_components_to_worksheet(root: adsk.fusion.Component, wb: xw.Workbook):
         "CA": 2200,
         "Li": 1500,
         "Is": 1800,
+        "Be": 1000,
+        "CAA": 2600,
     }
-
-    for i, (type, cost) in enumerate(installation_types.items()):
+    keys = list(installation_types.keys())
+    human_sort(keys)
+    for i, k in enumerate(keys):
+        cost = installation_types.get(k)
         y = 2 + i
-        count_ws.write(y, 13, type)
+        count_ws.write(y, 13, k)
         count_ws.write(y, 14, cost)
 
     # Set Category abbreviations
@@ -169,7 +173,8 @@ def add_components_to_worksheet(root: adsk.fusion.Component, wb: xw.Workbook):
             calc_ws.write(
                 row_modules_end,
                 2,
-                f'=IFERROR(MID(B{row_modules_end+1}, FIND("-", B{row_modules_end+1})+1, 2),"")',
+                f'=IFERROR(LEFT(RIGHT(B{row_modules_end+1}, LEN(B{row_modules_end+1}) - SEARCH("-", B{row_modules_end+1})), SEARCH("-", RIGHT(B{row_modules_end+1}, LEN(B{row_modules_end+1}) - SEARCH("-", B{row_modules_end+1})))-1), "")',
+                #f'=IFERROR(MID(B{row_modules_end+1}, FIND("-", B{row_modules_end+1})+1, 2),"")',
             )
             calc_ws.write(
                 row_modules_end,
