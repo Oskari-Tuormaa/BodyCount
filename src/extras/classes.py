@@ -115,11 +115,24 @@ def add_components_to_worksheet(root: adsk.fusion.Component, wb: xw.Workbook):
 
     # Set installation types and headers
     installation_types = {
-        "CA": 2200,
-        "Li": 1500,
-        "Is": 1800,
-        "Be": 1000,
-        "CAA": 2600,
+        "CA": 2091,
+        "Li": 1776,
+        "Is": 3552,
+        "Be": 1776,
+        "CAA": 2973,
+        "LIA": 2658,
+        "CAAA": 3855,
+        "ISA": 4434,
+        "ISAA": 5274,
+        "JA": 579,
+        "BA": 1776,
+        "BAA": 2658,
+        "WD": 2091,
+        "T1": 1000,
+        "T2": 1000,
+        "T3": 1000,
+        "T4": 500,
+        "HA": 2000,
     }
     keys = list(installation_types.keys())
     human_sort(keys)
@@ -130,16 +143,27 @@ def add_components_to_worksheet(root: adsk.fusion.Component, wb: xw.Workbook):
         count_ws.write(y, 14, cost)
 
     # Set Category abbreviations
-    categories = {
-        "String 1": "S1",
-        "String 2": "S2",
-        "String 3": "S3",
-        "Island": "I",
-        "Custom": "C",
-    }
-    for i, (cat, abbr) in enumerate(categories.items()):
+    categories = [
+        "String 1",
+        "String 2",
+        "String 3",
+        "String 4",
+        "String 5",
+        "Island",
+        "Wardrobe 1",
+        "Wardrobe 2",
+        "Wardrobe 3",
+        "Wardrobe 4",
+        "Wardrobe 5",
+        "Bathroom 1",
+        "Bathroom 2",
+        "Bathroom 3",
+        "Bathroom 4",
+        "Bathroom 5",
+        ]
+    for i, cat in enumerate(categories):
         count_ws.write(2 + i, 16, cat)
-        count_ws.write(2 + i, 17, abbr)
+        count_ws.write(2 + i, 17, cat)
 
     n_extra = 5
 
