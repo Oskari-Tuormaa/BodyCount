@@ -24,6 +24,14 @@ finally:
 
 log_dir = Path(Path(__file__).parent.parent, "logs")
 
+def filter_name(name: str) -> str:
+    OCC_NAME_FILTERS = [
+        (r"^(.*) v\d+$", r"\1"),
+    ]
+    for pat, repl in OCC_NAME_FILTERS:
+        name = re.sub(pat, repl, name)
+    return name
+
 
 def add_bodies_to_worksheet(root: adsk.fusion.Component, wb: xw.Workbook):
     # Get sheets
@@ -33,7 +41,7 @@ def add_bodies_to_worksheet(root: adsk.fusion.Component, wb: xw.Workbook):
     # Count BRepBodies
     counts = {}
     for body in traverse_brepbodies(root):
-        name = body.name
+        name = filter_name(body.name)
         if name in counts:
             counts[name][0] += 1
         else:
@@ -41,7 +49,7 @@ def add_bodies_to_worksheet(root: adsk.fusion.Component, wb: xw.Workbook):
 
     # Count FSA
     for occ in traverse_occurrences(root, predicate=lambda x: "FSA" in x.name):
-        name = occ.component.name
+        name = filter_name(occ.component.name)
         if name in counts:
             counts[name][0] += 1
         else:
@@ -85,7 +93,7 @@ def add_components_to_worksheet(root: adsk.fusion.Component, wb: xw.Workbook):
     # Get prices
     prices = {}
     for occ in traverse_occurrences(root, depth=0):
-        name = occ.component.name
+        name = filter_name(occ.component.name)
         if name in prices:
             prices[name][0] += occ.isLightBulbOn
         else:
@@ -177,7 +185,7 @@ def add_components_to_worksheet(root: adsk.fusion.Component, wb: xw.Workbook):
             row_modules_end += 1
 
     n_modules = len(modules) + n_extra
-    for idx, c in enumerate(categories.keys()):
+    for idx, c in enumerate(categories):
         de_row = row_modules_end
         abbr_row = 3 + idx
         row = idx + de_row
@@ -222,7 +230,7 @@ def add_components_to_worksheet(root: adsk.fusion.Component, wb: xw.Workbook):
     ix = 6
     iy = 1
     n_raw_modules = row_modules_end - 3
-    for i, cat in enumerate(categories.keys()):
+    for i, cat in enumerate(categories):
         calc_ws.write(iy, ix + i, cat)
 
         abbr = f"Counts!R{3+i}"
@@ -247,7 +255,7 @@ def add_components_to_worksheet(root: adsk.fusion.Component, wb: xw.Workbook):
         else:
             off += x[0] if (x := prices.get(k)) else 0
         calc_ws.write(iy + i, ix, k)
-        for j, cat in enumerate(categories.keys()):
+        for j, cat in enumerate(categories):
             col = chr(71 + j)
             col_range = f"{col}3:{col}{n_raw_modules+3}"
             mod = f"F{iy+i+1}"
@@ -260,7 +268,7 @@ def add_components_to_worksheet(root: adsk.fusion.Component, wb: xw.Workbook):
 
     # Write InDesign sheet
     stride = n_modules + 2
-    for i, cat in enumerate(categories.keys()):
+    for i, cat in enumerate(categories):
         y_top = i * stride
         indesign_ws.write(y_top, 0, cat)
 
@@ -338,9 +346,7 @@ def traverse_occurrences(
         if not occ.isVisible:
             continue
 
-        if predicate is None:
-            yield occ
-        elif predicate(occ):
+        if predicate is None or predicate(occ):
             yield occ
 
 
