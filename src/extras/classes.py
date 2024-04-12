@@ -150,7 +150,7 @@ def add_components_to_worksheet(root: adsk.fusion.Component, wb: xw.Workbook):
                 8,
                 row_modules_end,
                 8,
-                {"validate": "list", "source": "=$R$3:$R$7"},
+                {"validate": "list", "source": "=$R$3:$R$90"},
             )
             count_ws.write(row_modules_end, 9, int(per))
             count_ws.write(
