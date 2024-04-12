@@ -60,8 +60,10 @@ def add_bodies_to_worksheet(root: adsk.fusion.Component, wb: xw.Workbook):
         count, body = counts[name]
         ws.write(2 + i, 1, name)
         ws.write(2 + i, 2, count)
-        ws.write(2 + i, 3, body.material.name)
-        ws.write(2 + i, 4, body.physicalProperties.mass)
+        if hasattr(body, "material"):
+            ws.write(2 + i, 3, body.material.name)
+        if hasattr(body, "physicalProperties"):
+            ws.write(2 + i, 4, body.physicalProperties.mass)
     bend = 2 + len(counts)
 
 
