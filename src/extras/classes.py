@@ -191,7 +191,7 @@ def add_components_to_worksheet(root: adsk.fusion.Component, wb: xw.Workbook):
             count_ws.write(
                 row_modules_end,
                 10,
-                f"=ROUND(J{row_modules_end+1}*1.4 + IF(ISBLANK(H{row_modules_end+1}), 0, 2206), 0)",
+                f"=ROUND(J{row_modules_end+1}*2, 0)",
             )
             count_ws.write(row_modules_end, 11, f"=ROUND(K{row_modules_end+1}*1.25, 0)")
 
