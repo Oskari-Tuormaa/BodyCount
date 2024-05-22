@@ -86,9 +86,10 @@ def add_components_to_worksheet(root: adsk.fusion.Component, wb: xw.Workbook):
 
     def get_price(occ: adsk.fusion.Occurrence) -> float:
         try:
-            return float(occ.component.description)
+            price = float(occ.component.description)
         except (ValueError, AttributeError):
-            return sum(get_price(other) for other in occ.childOccurrences if other.isLightBulbOn)
+            price = 0
+        return price + sum(get_price(other) for other in occ.childOccurrences if other.isLightBulbOn)
 
     # Get prices
     prices = {}
