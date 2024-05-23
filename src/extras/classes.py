@@ -59,7 +59,7 @@ def add_bodies_to_worksheet(root: adsk.fusion.Component, wb: xw.Workbook):
     ws.write(1, 1, "Body")
     ws.write(1, 2, "Count")
     ws.write(1, 3, "Material")
-    ws.write(1, 4, "Mass [kg]")
+    ws.write(1, 4, "Price")
 
     # Add counts
     keys = list(counts.keys())
@@ -70,9 +70,12 @@ def add_bodies_to_worksheet(root: adsk.fusion.Component, wb: xw.Workbook):
         ws.write(2 + i, 2, count)
         if hasattr(body, "material"):
             ws.write(2 + i, 3, body.material.name)
-        if hasattr(body, "physicalProperties"):
-            ws.write(2 + i, 4, body.physicalProperties.mass)
-    bend = 2 + len(counts)
+        if hasattr(body, "description") and body.desciption != "":
+            try:
+                price = float(body.description)
+            except (ValueError, AttributeError):
+                price = "ERROR IN DESCRIPTION"
+            ws.write(2 + i, 4, price)
 
 
 def add_components_to_worksheet(root: adsk.fusion.Component, wb: xw.Workbook):
