@@ -70,9 +70,9 @@ def add_bodies_to_worksheet(root: adsk.fusion.Component, wb: xw.Workbook):
         ws.write(2 + i, 2, count)
         if hasattr(body, "material"):
             ws.write(2 + i, 3, body.material.name)
-        if hasattr(body, "description") and body.desciption != "":
+        if (occ := body.assemblyContext) is not None and occ.description != "":
             try:
-                price = float(body.description)
+                price = float(occ.description)
             except (ValueError, AttributeError):
                 price = "ERROR IN DESCRIPTION"
             ws.write(2 + i, 4, price)
