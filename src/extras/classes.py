@@ -32,28 +32,47 @@ def filter_name(name: str) -> str:
         name = re.sub(pat, repl, name)
     return name
 
+def get_price_of_occurrence(occ: adsk.fusion.Occurrence) -> float:
+    try:
+        price = float(occ.component.description)
+    except (ValueError, AttributeError):
+        price = 0
+    return price + sum(get_price_of_occurrence(other) for other in occ.childOccurrences if other.isLightBulbOn)
+
 
 def add_bodies_to_worksheet(root: adsk.fusion.Component, wb: xw.Workbook):
     # Get sheets
     if (ws := wb.get_worksheet_by_name("Counts")) is None:
         ws = wb.add_worksheet("Counts")
 
+    # counts: name -> (count, material, price)
+    counts: Dict[str, list[int, str | None, float | None]] = {}
+
     # Count BRepBodies
-    counts = {}
     for body in traverse_brepbodies(root):
         name = filter_name(body.name)
-        if name in counts:
-            counts[name][0] += 1
-        else:
-            counts[name] = [1, body]
+        if name not in counts:
+            counts[name] = [0, None, None]
+        counts[name][0] += 1
+
+        if hasattr(body, "material"):
+            counts[name][1] = body.material.name
+        
+        if body.parentComponent.description != "":
+            try:
+                counts[name][2] = float(body.parentComponent.description)
+            except (ValueError, AttributeError):
+                counts[name][2] = "ERROR IN DESCRIPTION"
 
     # Count FSA
     for occ in traverse_occurrences(root, predicate=lambda x: "FSA" in x.name):
         name = filter_name(occ.component.name)
-        if name in counts:
-            counts[name][0] += 1
-        else:
-            counts[name] = [1, occ]
+        print(name)
+        if name not in counts:
+            counts[name] = [0, None, occ.component.description]
+        counts[name][0] += 1
+
+        counts[name][2] = get_price_of_occurrence(occ)
 
     # Add headers
     ws.write(1, 1, "Body")
@@ -65,16 +84,12 @@ def add_bodies_to_worksheet(root: adsk.fusion.Component, wb: xw.Workbook):
     keys = list(counts.keys())
     human_sort(keys)
     for i, name in enumerate(keys):
-        count, body = counts[name]
+        count, material, price = counts[name]
         ws.write(2 + i, 1, name)
         ws.write(2 + i, 2, count)
-        if hasattr(body, "material"):
-            ws.write(2 + i, 3, body.material.name)
-        if (occ := body.assemblyContext) is not None and occ.description != "":
-            try:
-                price = float(occ.description)
-            except (ValueError, AttributeError):
-                price = "ERROR IN DESCRIPTION"
+        if material is not None:
+            ws.write(2 + i, 3, material)
+        if price is not None:
             ws.write(2 + i, 4, price)
 
 
@@ -87,13 +102,6 @@ def add_components_to_worksheet(root: adsk.fusion.Component, wb: xw.Workbook):
     if (indesign_ws := wb.get_worksheet_by_name("InDesign")) is None:
         indesign_ws = wb.add_worksheet("InDesign")
 
-    def get_price(occ: adsk.fusion.Occurrence) -> float:
-        try:
-            price = float(occ.component.description)
-        except (ValueError, AttributeError):
-            price = 0
-        return price + sum(get_price(other) for other in occ.childOccurrences if other.isLightBulbOn)
-
     # Get prices
     prices = {}
     for occ in traverse_occurrences(root, depth=0):
@@ -101,7 +109,7 @@ def add_components_to_worksheet(root: adsk.fusion.Component, wb: xw.Workbook):
         if name in prices:
             prices[name][0] += occ.isLightBulbOn
         else:
-            prices[name] = [1, get_price(occ)]
+            prices[name] = [1, get_price_of_occurrence(occ)]
 
     # Populate headers
     count_ws.write(1, 7, "Modules")
