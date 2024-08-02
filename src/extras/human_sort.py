@@ -1,12 +1,12 @@
 import re
 
 
-def tryint(s):
+def tryfloat(s):
     """
-    Return an int if possible, or `s` unchanged.
+    Return an float if possible, or `s` unchanged.
     """
     try:
-        return int(s)
+        return float(s)
     except ValueError:
         return s
 
@@ -19,7 +19,13 @@ def alphanum_key(s):
     ["z", 23, "a"]
 
     """
-    key = [tryint(c) for c in re.split("([0-9]+)", s)]
+    if isinstance(s, list) or isinstance(s, tuple):
+        return [alphanum_key(x) for x in s]
+    
+    if isinstance(s, int) or isinstance(s, float):
+        return s
+
+    key = [tryfloat(c) for c in re.split("([0-9]+)", s)]
 
     return key
 

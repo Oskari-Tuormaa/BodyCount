@@ -103,13 +103,19 @@ def add_components_to_worksheet(root: adsk.fusion.Component, wb: xw.Workbook):
         indesign_ws = wb.add_worksheet("InDesign")
 
     # Get prices
-    prices = {}
+    # First key is occurence name, second is price. This is the case,
+    # since multiple occurence's with the same name, can have different
+    # prices, and need to be displayed separatly.
+    prices: Dict[(str, float), int] = {}
     for occ in traverse_occurrences(root, depth=0):
+        if not occ.isLightBulbOn:
+            continue
         name = filter_name(occ.component.name)
-        if name in prices:
-            prices[name][0] += occ.isLightBulbOn
-        else:
-            prices[name] = [1, get_price_of_occurrence(occ)]
+        price = get_price_of_occurrence(occ)
+        key = (name, price)
+        if key not in prices:
+            prices[key] = 0
+        prices[key] += 1
 
     # Populate headers
     count_ws.write(1, 7, "Modules")
@@ -180,17 +186,18 @@ def add_components_to_worksheet(root: adsk.fusion.Component, wb: xw.Workbook):
     n_extra = 5
 
     # Add data per Price
-    modules = list(prices.keys())
+    modules: List[(str, int)] = list(prices.keys())
     human_sort(modules)
     row_modules_end = 2
-    for mod in modules + [""] * n_extra:
-        v = prices.get(mod)
+    for mod in modules + [("", 0)] * n_extra:
+        name, price = mod
+        n = prices.get(mod)
 
-        n = 1 if v is None else v[0]
-        per = 0 if v is None else v[1]
+        if n is None:
+            n = 1
 
         for i in range(n):
-            count_ws.write(row_modules_end, 7, mod)
+            count_ws.write(row_modules_end, 7, name)
             count_ws.data_validation(
                 row_modules_end,
                 8,
@@ -198,7 +205,7 @@ def add_components_to_worksheet(root: adsk.fusion.Component, wb: xw.Workbook):
                 8,
                 {"validate": "list", "source": "=$R$3:$R$90"},
             )
-            count_ws.write(row_modules_end, 9, int(per))
+            count_ws.write(row_modules_end, 9, float(price))
             count_ws.write(
                 row_modules_end,
                 10,
@@ -284,13 +291,13 @@ def add_components_to_worksheet(root: adsk.fusion.Component, wb: xw.Workbook):
     iy += n_raw_modules + 2
     ix -= 1
     off = 0
-    for i, k in enumerate(modules + [""] * n_extra):
-        if k == "":
-            k = f"=Counts!H{3+off}"
+    for i, (name, price) in enumerate(modules + [("", 0)] * n_extra):
+        if name == "":
+            name = f"=Counts!H{3+off}"
             off += 1
         else:
-            off += x[0] if (x := prices.get(k)) else 0
-        calc_ws.write(iy + i, ix, k)
+            off += x if (x := prices.get((name, price))) else 0
+        calc_ws.write(iy + i, ix, name)
         for j, cat in enumerate(categories):
             col = chr(71 + j)
             col_range = f"{col}3:{col}{n_raw_modules+3}"
