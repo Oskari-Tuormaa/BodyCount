@@ -1,0 +1,13 @@
+{
+	"autodeskProduct":	"Fusion",
+	"type":	"addin",
+	"id":	"fe214900-79b1-457a-a949-39388b572ba4",
+	"author":	"Oskari Kristian Tuormaa",
+	"description":	{
+		"":	""
+	},
+	"version":	"0.1",
+	"runOnStartup":	false,
+	"supportedOS":	"windows|mac",
+	"editEnabled":	true
+}
