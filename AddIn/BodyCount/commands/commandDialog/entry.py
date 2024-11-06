@@ -1,5 +1,7 @@
 import adsk.core
 import os
+
+import adsk.fusion
 from ...lib import fusionAddInUtils as futil
 from ... import config
 app = adsk.core.Application.get()
@@ -29,6 +31,21 @@ ICON_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'resource
 # they are not released and garbage collected.
 local_handlers = []
 
+ATTR_GRP = "Vermland"
+ATTR_SETTING_NAME = "Settings"
+def get_settings_attr():
+    product = app.activeProduct
+    design = adsk.fusion.Design.cast(product)
+
+    if (attr := design.attributes.itemByName(ATTR_GRP, ATTR_SETTING_NAME)):
+        return attr.value
+    return design.attributes.add(ATTR_GRP, ATTR_SETTING_NAME, "DEFAULT").value
+
+def set_settings_attr(value: str):
+    product = app.activeProduct
+    design = adsk.fusion.Design.cast(product)
+    design.attributes.add(ATTR_GRP, ATTR_SETTING_NAME, value)
+
 
 # Executed when add-in is run.
 def start():
@@ -43,10 +60,12 @@ def start():
     workspace = ui.workspaces.itemById(WORKSPACE_ID)
 
     # Get the panel the button will be created in.
-    panel = workspace.toolbarPanels.itemById(PANEL_ID)
+    # panel = workspace.toolbarPanels.itemById(PANEL_ID)
+
+    newPanel = workspace.toolbarPanels.add("mycustompanel", "My Custom Panel", PANEL_ID, False)
 
     # Create the button command control in the UI after the specified existing command.
-    control = panel.controls.addCommand(cmd_def, COMMAND_BESIDE_ID, False)
+    control = newPanel.controls.addCommand(cmd_def, COMMAND_BESIDE_ID, False)
 
     # Specify if the command is promoted to the main toolbar. 
     control.isPromoted = IS_PROMOTED
@@ -56,7 +75,7 @@ def start():
 def stop():
     # Get the various UI elements for this command
     workspace = ui.workspaces.itemById(WORKSPACE_ID)
-    panel = workspace.toolbarPanels.itemById(PANEL_ID)
+    panel = workspace.toolbarPanels.itemById("mycustompanel")
     command_control = panel.controls.itemById(CMD_ID)
     command_definition = ui.commandDefinitions.itemById(CMD_ID)
 
@@ -67,6 +86,9 @@ def stop():
     # Delete the command definition
     if command_definition:
         command_definition.deleteMe()
+
+    if panel and len(panel.controls) == 0:
+        panel.deleteMe()
 
 
 # Function that is called when a user clicks the corresponding button in the UI.
@@ -81,7 +103,8 @@ def command_created(args: adsk.core.CommandCreatedEventArgs):
     # TODO Define the dialog for your command by adding different inputs to the command.
 
     # Create a simple text box input.
-    inputs.addTextBoxCommandInput('text_box', 'Some Text', 'Enter some text.', 1, False)
+    settings = get_settings_attr()
+    inputs.addTextBoxCommandInput('text_box', 'Some Text', settings, 1, False)
 
     # Create a value input field and set the default using 1 unit of the default length unit.
     defaultLengthUnits = app.activeProduct.unitsManager.defaultLengthUnits
@@ -108,6 +131,8 @@ def command_execute(args: adsk.core.CommandEventArgs):
     inputs = args.command.commandInputs
     text_box: adsk.core.TextBoxCommandInput = inputs.itemById('text_box')
     value_input: adsk.core.ValueCommandInput = inputs.itemById('value_input')
+
+    set_settings_attr(text_box.text)
 
     # Do something interesting
     text = text_box.text

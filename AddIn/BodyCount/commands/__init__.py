@@ -6,13 +6,15 @@
 from .commandDialog import entry as commandDialog
 from .paletteShow import entry as paletteShow
 from .paletteSend import entry as paletteSend
+from .define_strings import entry as define_strings
 
 # TODO add your imported modules to this list.
 # Fusion will automatically call the start() and stop() functions.
 commands = [
     commandDialog,
     paletteShow,
-    paletteSend
+    paletteSend,
+    define_strings
 ]
 
 
