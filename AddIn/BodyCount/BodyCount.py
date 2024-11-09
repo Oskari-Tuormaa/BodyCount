@@ -1,15 +1,15 @@
+import sys
+import subprocess
+
 # Try importing openpyxl, and install through pip if not found.
+OPENPYXL_VERSION = "3.1.5"
 try:
     import openpyxl
 except ModuleNotFoundError:
-    python_path = sys.executable.split('/')
-    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'openpyxl'])
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', f'openpyxl=={OPENPYXL_VERSION}'])
 
 from . import commands
 from .lib import fusionAddInUtils as futil
-
-import sys
-import subprocess
 
 
 def run(context):
