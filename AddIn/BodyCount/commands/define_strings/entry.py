@@ -12,7 +12,7 @@ ui = app.userInterface
 
 CMD_ID = f'{config.COMPANY_NAME}_{config.ADDIN_NAME}_define_strings'
 CMD_NAME = "Define Strings"
-CMD_DESCRIPTION = "Define strings"
+CMD_DESCRIPTION = "Define strings" # TODO: Better description
 
 IS_PROMOTED = True
 
@@ -45,7 +45,11 @@ def start():
     futil.add_handler(cmd_def.commandCreated, command_created)
 
     workspace = ui.workspaces.itemById(WORKSPACE_ID)
-    panel = workspace.toolbarPanels.add(PANEL_ID, "BodyCount")
+
+    # Create panel if it doesn't already exist
+    if (panel := workspace.toolbarPanels.itemById(PANEL_ID)) is None:
+        panel = workspace.toolbarPanels.add(PANEL_ID, "BodyCount")
+
     control = panel.controls.addCommand(cmd_def)
     control.isPromoted = IS_PROMOTED
 
@@ -64,6 +68,7 @@ def stop():
     if control:
         control.deleteMe()
 
+    # Delete panel if this was the last command
     if panel and len(panel.controls) == 0:
         panel.deleteMe()
 
@@ -119,6 +124,8 @@ def command_input_changed(args: adsk.core.InputChangedEventArgs):
     elif changed_input.id == 'rmStringBtn':
         table: adsk.core.TableCommandInput = inputs.itemById('stringsTable')
         n_strings = table.rowCount
+        if n_strings == 0:
+            return
         table.deleteRow(n_strings - 1)
     
     elif changed_input.id == 'sel1':

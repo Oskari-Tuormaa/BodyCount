@@ -4,11 +4,13 @@
 # If you want to add an additional command, duplicate one of the existing directories and import it here.
 # You need to use aliases (import "entry" as "my_module") assuming you have the default module named "entry".
 from .define_strings import entry as define_strings
+from .count_bodies import entry as count_bodies
 
 # TODO add your imported modules to this list.
 # Fusion will automatically call the start() and stop() functions.
 commands = [
-    define_strings
+    define_strings,
+    count_bodies
 ]
 
 
