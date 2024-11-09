@@ -1,6 +1,15 @@
-# Assuming you have not changed the general structure of the template no modification is needed in this file.
+# Try importing openpyxl, and install through pip if not found.
+try:
+    import openpyxl
+except ModuleNotFoundError:
+    python_path = sys.executable.split('/')
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'openpyxl'])
+
 from . import commands
 from .lib import fusionAddInUtils as futil
+
+import sys
+import subprocess
 
 
 def run(context):
