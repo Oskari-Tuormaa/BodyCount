@@ -20,6 +20,8 @@ WORKSPACE_ID = 'FusionSolidEnvironment'
 PANEL_ID = 'BodyCount'
 
 ICON_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'resources', '')
+PLUS_ICON_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'resources', 'Plus', '')
+MINUS_ICON_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'resources', 'Minus', '')
 
 ATTR_GRP = f'{config.COMPANY_NAME}_{config.ADDIN_NAME}'
 
@@ -79,10 +81,10 @@ def command_created(args: adsk.core.CommandCreatedEventArgs):
 
     table = inputs.addTableCommandInput('stringsTable', 'Strings', 1, '1')
 
-    addbutton = inputs.addBoolValueInput('addStringBtn', 'Add String', False, ICON_FOLDER)
+    addbutton = inputs.addBoolValueInput('addStringBtn', 'Add String', False, PLUS_ICON_FOLDER)
     table.addToolbarCommandInput(addbutton)
 
-    rmbutton = inputs.addBoolValueInput('rmStringBtn', 'Remove String', False, ICON_FOLDER)
+    rmbutton = inputs.addBoolValueInput('rmStringBtn', 'Remove String', False, MINUS_ICON_FOLDER)
     table.addToolbarCommandInput(rmbutton)
 
     strings = get_strings()
