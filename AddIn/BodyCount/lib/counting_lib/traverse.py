@@ -88,3 +88,16 @@ def collect_bodies_under(root: adsk.fusion.Component | adsk.fusion.Occurrence) -
     bodies_list = list(bodies_dict.values())
     human_sort(bodies_list, key=lambda x: x.name)
     return bodies_list
+
+
+def collect_modules_under(root: adsk.fusion.Component | adsk.fusion.Occurrence) -> list[Module]:
+    modules: list[Module] = []
+
+    for branch in traverse_occurrences(root, depth=0):
+        modules.append(Module(
+            "",
+            filter_name(branch[-1].name),
+            collect_bodies_under(branch[-1])
+        ))
+
+    return modules

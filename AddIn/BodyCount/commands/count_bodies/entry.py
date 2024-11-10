@@ -101,6 +101,7 @@ def command_created(args: adsk.core.CommandCreatedEventArgs):
     rootComp = design.rootComponent
 
     bodies = counting_lib.collect_bodies_under(rootComp)
+    modules = counting_lib.collect_modules_under(rootComp)
 
     input_file_path = get_input_file_path()
     if not input_file_path:
@@ -109,6 +110,7 @@ def command_created(args: adsk.core.CommandCreatedEventArgs):
     workbook = op.open(input_file_path, keep_vba=True, keep_links=True, rich_text=True)
 
     excel_lib.write_bodies_to_table(workbook, bodies)
+    excel_lib.write_modules_to_table(workbook, modules)
 
     output_file_path = get_output_file_path()
     if not output_file_path:
