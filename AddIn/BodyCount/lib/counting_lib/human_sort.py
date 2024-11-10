@@ -1,7 +1,10 @@
 import re
 
+from typing import TypeVar
+from collections.abc import Callable
 
-def tryfloat(s):
+
+def tryfloat(s: str) -> str | float:
     """
     Return an float if possible, or `s` unchanged.
     """
@@ -11,7 +14,7 @@ def tryfloat(s):
         return s
 
 
-def alphanum_key(s):
+def alphanum_key(s: str) -> list[str | float]:
     """
     Turn a string into a list of string and number chunks.
 
@@ -25,13 +28,15 @@ def alphanum_key(s):
     if isinstance(s, int) or isinstance(s, float):
         return s
 
-    key = [tryfloat(c) for c in re.split("([0-9]+)", s)]
-
-    return key
+    return [tryfloat(c) for c in re.split("([0-9]+)", s)]
 
 
-def human_sort(l):
+T = TypeVar('T')
+def human_sort(l: list[T], key: Callable[[T], str] | None = None):
     """
     Sort a list in the way that humans expect.
     """
-    l.sort(key=alphanum_key)
+    if not key:
+        l.sort(key=alphanum_key)
+    else:
+        l.sort(key=lambda x: alphanum_key(key(x)))
