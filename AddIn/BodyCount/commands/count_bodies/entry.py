@@ -14,23 +14,28 @@ from ... import config
 app = adsk.core.Application.get()
 ui = app.userInterface
 
-CMD_ID = f'{config.COMPANY_NAME}_{config.ADDIN_NAME}_count_bodies'
+CMD_ID = f"{config.COMPANY_NAME}_{config.ADDIN_NAME}_count_bodies"
 CMD_NAME = "Count Bodies"
-CMD_DESCRIPTION = "Count Bodies" # TODO: Better description
+CMD_DESCRIPTION = "Count Bodies"  # TODO: Better description
 
 IS_PROMOTED = True
 
-WORKSPACE_ID = 'FusionSolidEnvironment'
-PANEL_ID = 'BodyCount'
+WORKSPACE_ID = "FusionSolidEnvironment"
+PANEL_ID = "BodyCount"
 
-ICON_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'resources', '')
+ICON_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "resources", "")
 
-ATTR_GRP = f'{config.COMPANY_NAME}_{config.ADDIN_NAME}'
+ATTR_GRP = f"{config.COMPANY_NAME}_{config.ADDIN_NAME}"
+
+selection_graphics = custom_graphics_lib.SelectionGraphicsGroups()
+
 
 def start():
     futil.log("Hello from count_bodies")
 
-    cmd_def = ui.commandDefinitions.addButtonDefinition(CMD_ID, CMD_NAME, CMD_DESCRIPTION, ICON_FOLDER)
+    cmd_def = ui.commandDefinitions.addButtonDefinition(
+        CMD_ID, CMD_NAME, CMD_DESCRIPTION, ICON_FOLDER
+    )
 
     futil.add_handler(cmd_def.commandCreated, command_created)
 
@@ -42,6 +47,7 @@ def start():
 
     control = panel.controls.addCommand(cmd_def)
     control.isPromoted = IS_PROMOTED
+
 
 def stop():
     futil.log("Goodbye from count_bodies")
@@ -62,6 +68,7 @@ def stop():
     if panel and len(panel.controls) == 0:
         panel.deleteMe()
 
+
 def get_input_file_path() -> str | None:
     open_dialog = ui.createFileDialog()
     open_dialog.title = "Select input excel file"
@@ -70,11 +77,13 @@ def get_input_file_path() -> str | None:
     open_dialog.showOpen()
     return open_dialog.filename
 
+
 def get_output_file_path() -> str | None:
     save_dialog = ui.createFileDialog()
     save_dialog.title = "Select output excel file"
     save_dialog.showSave()
     return save_dialog.filename
+
 
 def try_saving_workbook(workbook: Workbook, path: str):
     while True:
@@ -85,13 +94,14 @@ def try_saving_workbook(workbook: Workbook, path: str):
             button = ui.messageBox(
                 "The file is probably open in excel. Please close the file and try again.",
                 "Permission error",
-                adsk.core.MessageBoxButtonTypes.RetryCancelButtonType
-                )
-            
+                adsk.core.MessageBoxButtonTypes.RetryCancelButtonType,
+            )
+
             # If user pressed Cancel, we stop the infinite loop
             # by returning.
             if button == adsk.core.DialogResults.DialogCancel:
                 return
+
 
 def command_created(args: adsk.core.CommandCreatedEventArgs):
     futil.log("creating count_bodies")
