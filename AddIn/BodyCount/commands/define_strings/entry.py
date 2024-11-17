@@ -1,10 +1,10 @@
 import adsk.core
 import adsk.fusion
 import os
-
 import json
 
 from ...lib import fusionAddInUtils as futil
+from ...lib import attributes_lib
 from ... import config
 
 app = adsk.core.Application.get()
@@ -24,19 +24,6 @@ PLUS_ICON_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'res
 MINUS_ICON_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'resources', 'Minus', '')
 
 ATTR_GRP = f'{config.COMPANY_NAME}_{config.ADDIN_NAME}'
-
-def get_strings() -> list[str]:
-    product = app.activeProduct
-    design = adsk.fusion.Design.cast(product)
-
-    if (attr := design.attributes.itemByName(ATTR_GRP, 'strings')):
-        return json.loads(attr.value)
-    return []
-
-def set_strings(strings: list[str]):
-    product = app.activeProduct
-    design = adsk.fusion.Design.cast(product)
-    design.attributes.add(ATTR_GRP, 'strings', json.dumps(strings))
 
 
 def start():
@@ -79,7 +66,7 @@ def command_created(args: adsk.core.CommandCreatedEventArgs):
 
     inputs = args.command.commandInputs
 
-    table = inputs.addTableCommandInput('stringsTable', 'Strings', 1, '1')
+    table = inputs.addTableCommandInput('stringsTable', 'Strings', 3, '1:1:1')
 
     addbutton = inputs.addBoolValueInput('addStringBtn', 'Add String', False, PLUS_ICON_FOLDER)
     table.addToolbarCommandInput(addbutton)
@@ -87,7 +74,7 @@ def command_created(args: adsk.core.CommandCreatedEventArgs):
     rmbutton = inputs.addBoolValueInput('rmStringBtn', 'Remove String', False, MINUS_ICON_FOLDER)
     table.addToolbarCommandInput(rmbutton)
 
-    strings = get_strings()
+    strings = attributes_lib.get_file_data().strings
 
     for i, string in enumerate(strings):
         stringInput = inputs.addStringValueInput(f'string{i}', '', string)
@@ -107,12 +94,16 @@ def command_execute(args: adsk.core.CommandEventArgs):
     table: adsk.core.TableCommandInput = inputs.itemById('stringsTable')
 
     nStrings = table.rowCount
-    strings = [inputs.itemById(f'string{i}').value for i in range(nStrings)]
-    set_strings(strings)
+    strings = [table.getInputAtPosition(i, 0).value for i in range(nStrings)]
+    file_data = attributes_lib.get_file_data()
+    file_data.strings = strings
+    attributes_lib.set_file_data(file_data)
 
 def command_input_changed(args: adsk.core.InputChangedEventArgs):
     changed_input: adsk.core.CommandInput = args.input
     inputs = args.inputs
+    des = adsk.fusion.Design.cast(app.activeProduct)
+    root = des.rootComponent
 
     futil.log(f"Input changed define_strings {changed_input.id}")
 
@@ -128,7 +119,10 @@ def command_input_changed(args: adsk.core.InputChangedEventArgs):
         n_strings = table.rowCount
         if n_strings == 0:
             return
-        table.deleteRow(n_strings - 1)
+        if (idx := table.selectedRow) != -1:
+            table.deleteRow(idx)
+        else:
+            table.deleteRow(n_strings - 1)
     
     elif changed_input.id == 'sel1':
         changed_input: adsk.core.SelectionCommandInput
