@@ -27,8 +27,6 @@ ICON_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "resource
 
 ATTR_GRP = f"{config.COMPANY_NAME}_{config.ADDIN_NAME}"
 
-selection_graphics = custom_graphics_lib.SelectionGraphicsGroups()
-
 
 def start():
     futil.log("Hello from count_bodies")
