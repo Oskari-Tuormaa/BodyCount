@@ -11,6 +11,8 @@ from ...lib import counting_lib
 from ...lib import excel_lib
 from ... import config
 
+from ...lib import custom_graphics_lib
+
 app = adsk.core.Application.get()
 ui = app.userInterface
 
@@ -27,6 +29,8 @@ ICON_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "resource
 
 ATTR_GRP = f"{config.COMPANY_NAME}_{config.ADDIN_NAME}"
 
+selgroups = custom_graphics_lib.SelectionGraphicsGroups()
+
 
 def start():
     futil.log("Hello from count_bodies")
@@ -34,6 +38,12 @@ def start():
     cmd_def = ui.commandDefinitions.addButtonDefinition(
         CMD_ID, CMD_NAME, CMD_DESCRIPTION, ICON_FOLDER
     )
+
+    design = adsk.fusion.Design.cast(app.activeProduct)
+    root = design.rootComponent
+
+    while root.customGraphicsGroups.count != 0:
+        root.customGraphicsGroups.item(0).deleteMe()
 
     futil.add_handler(cmd_def.commandCreated, command_created)
 

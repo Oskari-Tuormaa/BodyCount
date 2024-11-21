@@ -1,13 +1,14 @@
 import adsk.fusion
 import adsk.core
 
+from adsk.fusion import BoundingBoxEntityTypes as bb_ent_types
+
 from dataclasses import dataclass
 from typing import Protocol
 
 
-class SupportsBoundingBox(Protocol):
-    @property
-    def boundingBox(self) -> adsk.core.BoundingBox3D:
+class SupportsBoundingBox2(Protocol):
+    def boundingBox2(self, entityTypes: adsk.fusion.BoundingBoxEntityTypes) -> adsk.core.BoundingBox3D:
         ...
 
 
@@ -20,6 +21,7 @@ class Cube:
 
 
 def generate_cube(corner1: adsk.core.Point3D, corner2: adsk.core.Point3D) -> Cube:
+    """Generates vertices, indices and normals for a cube going from corner1 to corner2."""
     # fmt: off
     vertices = adsk.fusion.CustomGraphicsCoordinates.create(
         [corner1.x, corner1.y, corner1.z,
@@ -98,8 +100,13 @@ def generate_cube(corner1: adsk.core.Point3D, corner2: adsk.core.Point3D) -> Cub
     return Cube(vertices, indices, normals, normalIndices)
 
 
-def generate_cube_bbox(comp: SupportsBoundingBox) -> Cube:
-    bbox = comp.boundingBox
+def generate_cube_bbox(comp: SupportsBoundingBox2) -> Cube:
+    """Generates vertices, indices and normals of a cube, given an object that supports the boundingBox2 method."""
+    bbox = comp.boundingBox2(
+        bb_ent_types.MeshBodyBoundingBoxEntityType |
+        bb_ent_types.SolidBRepBodyBoundingBoxEntityType |
+        bb_ent_types.SurfaceBodyBoundingBoxEntityType
+    )
     minPt = bbox.minPoint
     maxPt = bbox.maxPoint
-    return generate_cube(minPt, maxPt)
+    return generate_cube(minPt.copy(), maxPt.copy())

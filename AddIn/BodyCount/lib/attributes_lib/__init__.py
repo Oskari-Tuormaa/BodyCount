@@ -1,1 +1,1 @@
-from .attributes_lib import PerFileData, ModuleData, get_file_data, set_file_data
+from .attributes_lib import PerFileData, ModuleData, get_file_data, set_file_data, get_module_data, set_module_data, traverse_module_data
