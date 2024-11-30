@@ -55,8 +55,8 @@ def traverse_brepbodies(
 
 def filter_name(name: str) -> str:
     OCC_NAME_FILTERS = [
+        (r"^(.*):\d+$", r"\1"),
         (r"^(.*) v\d+$", r"\1"),
-        (r"^(.*) v\d+:\d+$", r"\1"),
     ]
     for pat, repl in OCC_NAME_FILTERS:
         name = re.sub(pat, repl, name)
@@ -64,8 +64,8 @@ def filter_name(name: str) -> str:
 
 def collect_bodies_under(root: adsk.fusion.Component | adsk.fusion.Occurrence) -> list[Body]:
     BODY_NAME_IGNORE_FILTERS = [
-        re.compile('^Body\d+$'),
-        re.compile('^delete$', re.IGNORECASE),
+        re.compile(r'^Body\d+$'),
+        re.compile(r'^delete$', re.IGNORECASE),
     ]
 
     bodies_dict: dict[tuple[str, str], Body] = {}
@@ -92,13 +92,21 @@ def collect_bodies_under(root: adsk.fusion.Component | adsk.fusion.Occurrence) -
 
 
 def collect_modules_under(root: adsk.fusion.Component | adsk.fusion.Occurrence) -> list[Module]:
+    GRP_PATTERN = re.compile(r'^G_(.*)$')
+
     modules: list[Module] = []
 
-    for occ in traverse_occurrences(root, depth=0):
-        modules.append(Module(
-            "",
-            filter_name(occ.name),
-            collect_bodies_under(occ)
-        ))
+    for top_lvl_occ in traverse_occurrences(root, depth=0):
+        top_lvl_name = filter_name(top_lvl_occ.name)
+        if not (match := GRP_PATTERN.match(top_lvl_name)):
+            continue
+
+        grp_name = match.group(1)
+        for occ in traverse_occurrences(top_lvl_occ, depth=0):
+            modules.append(Module(
+                grp_name,
+                filter_name(occ.name),
+                collect_bodies_under(occ)
+            ))
 
     return modules

@@ -1,9 +1,6 @@
 
 # TODO
 
-- Change "Define Strings" to "Display Ungrouped".
-    - "Strings" will be defined by top-level component, with some prefix (fx. "G_String1" and "G_Island").
-    - "Display Ungrouped" should mark all ungrouped bodies in transparent red, showing through other components.
 - Add per-user settings.
     - Add "Dropbox path" setting variable, that should point to Vermland folder in Dropbox.
 - Add Vermland shared settings.
@@ -30,6 +27,12 @@
     - It seems like that way I'm trying to install openpyxl doesn't play nice outside of the debug environment.
         - **So it turns out the `sys.executable` points to Fusion.exe instead of the python instance... So I've had to extract the path relative to Fusion.exe. This works on my machine, but might not work on others - have to test.**
         - **My fix probably also doesn't work at all on Mac's.**
+
+- Change "Define Strings" to "Display Ungrouped".
+    - "Strings" will be defined by top-level component, with some prefix (fx. "G_String1" and "G_Island").
+        - **Done**
+    - "Display Ungrouped" should mark all ungrouped bodies in transparent red, showing through other components.
+        - **Not done**
 
 # Done
 
