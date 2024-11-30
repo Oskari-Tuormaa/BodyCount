@@ -62,6 +62,6 @@ def traverse_module_data() -> Generator[tuple[adsk.fusion.Occurrence, ModuleData
     design = adsk.fusion.Design.cast(product)
     rootComp = design.rootComponent
 
-    for (*_, occ) in counting_lib.traverse_occurrences(rootComp):
+    for occ in counting_lib.traverse_occurrences(rootComp):
         if (data := get_module_data(occ)):
             yield (occ, data)
