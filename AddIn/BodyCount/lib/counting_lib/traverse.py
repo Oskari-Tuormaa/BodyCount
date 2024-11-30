@@ -63,9 +63,18 @@ def filter_name(name: str) -> str:
     return name
 
 def collect_bodies_under(root: adsk.fusion.Component | adsk.fusion.Occurrence) -> list[Body]:
+    BODY_NAME_IGNORE_FILTERS = [
+        re.compile('^Body\d+$'),
+        re.compile('^delete$', re.IGNORECASE),
+    ]
+
     bodies_dict: dict[tuple[str, str], Body] = {}
     for body in traverse_brepbodies(root):
         name = filter_name(body.name)
+
+        if any([pattern.match(name) for pattern in BODY_NAME_IGNORE_FILTERS]):
+            continue
+
         if hasattr(body, "material"):
             material = body.material.name
         else:
