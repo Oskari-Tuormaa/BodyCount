@@ -51,7 +51,14 @@ def traverse_brepbodies(
     """
     yield from [body for body in root.bRepBodies if body.isVisible]
     for occ in traverse_occurrences(root):
-        yield from [body for body in occ.component.bRepBodies if body.isVisible]
+        yield from [body for body in occ.bRepBodies if body.isVisible]
+
+def traverse_parents(
+    root: adsk.fusion.Occurrence
+) -> Generator[adsk.fusion.Occurrence, None, None]:
+    occ = root
+    while (occ := occ.assemblyContext):
+        yield occ
 
 def filter_name(name: str) -> str:
     OCC_NAME_FILTERS = [

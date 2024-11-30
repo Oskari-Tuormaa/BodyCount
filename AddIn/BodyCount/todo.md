@@ -28,12 +28,9 @@
         - **So it turns out the `sys.executable` points to Fusion.exe instead of the python instance... So I've had to extract the path relative to Fusion.exe. This works on my machine, but might not work on others - have to test.**
         - **My fix probably also doesn't work at all on Mac's.**
 
-- Change "Define Strings" to "Display Ungrouped".
-    - "Strings" will be defined by top-level component, with some prefix (fx. "G_String1" and "G_Island").
-        - **Done**
-    - "Display Ungrouped" should mark all ungrouped bodies in transparent red, showing through other components.
-        - **Not done**
-
 # Done
 
 - Ignore bodies with names matching "Body\d+" and "delete.*" with any case.
+- Change "Define Strings" to "Display Ungrouped".
+    - "Strings" will be defined by top-level component, with some prefix (fx. "G_String1" and "G_Island").
+    - "Display Ungrouped" should mark all ungrouped bodies in transparent red, showing through other components.
