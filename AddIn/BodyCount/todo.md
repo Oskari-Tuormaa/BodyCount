@@ -17,12 +17,20 @@
         - On opening of the command, validate if the previous path is still valid, and notify user the file no longer exists.
     - For advanced users, add a "Overwrite" checkmark that is defaulted to true.
         - If the checkmark is false, display an output excel file file select input.
-- Ignore bodies with names matching "Body\d+" and "delete.*" with any case.
-- Add check for newer BodyCount release, and automatic update.
-
-- Investigate bug where new instances of Fusion opens instead of installing openpyxl on first run of Add-In.
-    - It seems like that way I'm trying to install openpyxl doesn't play nice outside of the debug environment.
 
 - Add assertions and nicer output to excel_lib.
     - Missing sheet/tables.
     - Wrong column count in tables.
+
+- Add check for newer BodyCount release, and automatic update.
+
+# WIP
+
+- Investigate bug where new instances of Fusion opens instead of installing openpyxl on first run of Add-In.
+    - It seems like that way I'm trying to install openpyxl doesn't play nice outside of the debug environment.
+        - **So it turns out the `sys.executable` points to Fusion.exe instead of the python instance... So I've had to extract the path relative to Fusion.exe. This works on my machine, but might not work on others - have to test.**
+        - **My fix probably also doesn't work at all on Mac's.**
+
+# Done
+
+- Ignore bodies with names matching "Body\d+" and "delete.*" with any case.

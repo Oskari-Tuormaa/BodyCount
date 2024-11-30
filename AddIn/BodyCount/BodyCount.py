@@ -1,16 +1,35 @@
+import adsk.core
+
 import sys
 import subprocess
+import pkg_resources
 
-# Try importing openpyxl, and install through pip if not found.
-OPENPYXL_VERSION = "3.1.5"
-try:
-    import openpyxl
-except ModuleNotFoundError:
-    subprocess.check_call([sys.executable, '-m', 'pip', 'install', f'openpyxl=={OPENPYXL_VERSION}'])
+from pathlib import Path
 
-from . import commands
 from .lib import fusionAddInUtils as futil
 
+app = adsk.core.Application.get()
+ui = app.userInterface
+
+REQUIRED_PACKAGES = { 'openpyxl==3.1.0' }
+INSTALLED_PACKAGES = { f'{pkg.key}=={pkg.version}' for pkg in pkg_resources.working_set }
+PACKAGES_TO_INSTALL = REQUIRED_PACKAGES - INSTALLED_PACKAGES
+
+# Install Python packages if they're missing
+if len(PACKAGES_TO_INSTALL) > 0:
+    app = adsk.core.Application.get()
+    ui = app.userInterface
+
+    ui.messageBox("BodyCount needs to install some Python packages. This might cause a terminal window to open shortly. Please wait while packages install - it won't take too long.")
+
+    python_path = Path(sys.executable).parent/'Python'/'python.exe'
+    subprocess.check_call([python_path, '-m', 'pip', 'install', *PACKAGES_TO_INSTALL])
+
+    ui.messageBox("Package install done. Please restart Fusion.")
+    sys.exit(0)
+
+
+from . import commands
 
 def run(context):
     try:
