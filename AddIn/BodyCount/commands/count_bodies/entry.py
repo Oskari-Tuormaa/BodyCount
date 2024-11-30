@@ -89,6 +89,7 @@ def get_input_file_path() -> str | None:
 def get_output_file_path() -> str | None:
     save_dialog = ui.createFileDialog()
     save_dialog.title = "Select output excel file"
+    save_dialog.filter = "Excel file (*.xls;*.xlsx;*.xlsm);;All files (*)"
     save_dialog.showSave()
     return save_dialog.filename
 
