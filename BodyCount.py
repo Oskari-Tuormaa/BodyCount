@@ -16,17 +16,24 @@ INSTALLED_PACKAGES = { f'{pkg.key}=={pkg.version}' for pkg in pkg_resources.work
 PACKAGES_TO_INSTALL = REQUIRED_PACKAGES - INSTALLED_PACKAGES
 
 # Install Python packages if they're missing
-if len(PACKAGES_TO_INSTALL) > 0:
-    app = adsk.core.Application.get()
-    ui = app.userInterface
+try:
+    if len(PACKAGES_TO_INSTALL) > 0:
+        app = adsk.core.Application.get()
+        ui = app.userInterface
 
-    ui.messageBox("BodyCount needs to install some Python packages. This might cause a terminal window to open shortly. Please wait while packages install - it won't take too long.")
+        ui.messageBox("BodyCount needs to install some Python packages. This might cause a terminal window to open shortly. Please wait while packages install - it won't take too long.")
 
-    python_path = Path(sys.executable).parent/'Python'/'python.exe'
-    subprocess.check_call([python_path, '-m', 'pip', 'install', *PACKAGES_TO_INSTALL])
+        python_path = Path(sys.executable)
 
-    ui.messageBox("Package install done. Please restart Fusion.")
-    sys.exit(0)
+        if python_path.stem != "python":
+            python_path = python_path.parent/'Python'/'python.exe'
+
+        subprocess.check_call([python_path, '-m', 'pip', 'install', *PACKAGES_TO_INSTALL])
+
+        ui.messageBox("Package install done. Please restart Fusion.")
+        sys.exit(0)
+except:
+    futil.handle_error('bodycount_setup')
 
 
 from . import commands
