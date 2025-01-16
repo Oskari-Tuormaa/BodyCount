@@ -32,6 +32,6 @@ Follow these steps to install and use this add-in in Autodesk Fusion 360:
 
 ### Step 4: Enable the Add-In
 1. Restart Fusion 360 to detect the new add-in.
-2. Open the **Add-Ins** dialog again (via the Extensions menu).
+2. Open the **Add-Ins** dialog again (via the **Utilities** tab).
 3. Find the add-in in the list.
 4. Click **Run** to enable it (or enable **Load at Startup** if you want it to start automatically every time Fusion 360 opens).
