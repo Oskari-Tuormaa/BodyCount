@@ -5,12 +5,14 @@
 # You need to use aliases (import "entry" as "my_module") assuming you have the default module named "entry".
 from .show_ungrouped import entry as show_ungrouped
 from .count_bodies import entry as count_bodies
+from .settings import entry as settings
 
 # TODO add your imported modules to this list.
 # Fusion will automatically call the start() and stop() functions.
 commands = [
     show_ungrouped,
-    count_bodies
+    count_bodies,
+    settings
 ]
 
 
