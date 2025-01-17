@@ -1,13 +1,8 @@
 import adsk.core
 import adsk.fusion
 import os
-import re
-
-from dataclasses import dataclass
-from typing import cast
 
 from ...lib import fusionAddInUtils as futil
-from ...lib import attributes_lib
 from ...lib import counting_lib
 from ...lib import custom_graphics_lib
 from ... import config
@@ -25,8 +20,6 @@ WORKSPACE_ID = 'FusionSolidEnvironment'
 PANEL_ID = 'BodyCount'
 
 ICON_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'resources', '')
-
-ATTR_GRP = f'{config.COMPANY_NAME}_{config.ADDIN_NAME}'
 
 selection_graphics = custom_graphics_lib.SelectionGraphicsGroups()
 
