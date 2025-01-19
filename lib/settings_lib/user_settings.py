@@ -8,7 +8,7 @@ USER_SETTINGS_FILE = Path(__file__).parent.parent.parent/'.user-settings.json'
 @dataclass
 class UserData(Serializable):
     shared_data_path: str | None = None
-    advanced_mode: bool = False
+    overwrite: bool = True
 
 cached_user_data: UserData | None = None
 cached_user_data_time: float = 0

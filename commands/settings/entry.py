@@ -70,16 +70,19 @@ def command_created(args: adsk.core.CommandCreatedEventArgs):
 
     inputs.addTextBoxCommandInput('', '', '<h3><center>User Data</center></h3>', 1, True)
     inputs.addTextBoxCommandInput('', '', '<i><center>These settings are saved locally on your computer.</center></i>', 1, True)
-    dropbox_path = inputs.addStringValueInput('dropbox_path', 'Path to Dropbox')
 
+    dropbox_path = inputs.addStringValueInput('dropbox_path', 'Path to Dropbox')
     inputs.addBoolValueInput('select_folder', 'Select Folder', False)
+
+    if user_data.shared_data_path is not None:
+        dropbox_path.value = user_data.shared_data_path
+
+    overwrite_check = inputs.addBoolValueInput('overwrite', 'Overwrite excel document', True)
+    overwrite_check.value = user_data.overwrite
 
     inputs.addSeparatorCommandInput('')
     inputs.addTextBoxCommandInput('', '', '<h3><center>Shared Data</center></h3>', 1, True)
     inputs.addTextBoxCommandInput('', '', '<i><center>These settings are saved in Dropbox.</center></i>', 1, True)
-
-    if user_data.shared_data_path is not None:
-        dropbox_path.value = user_data.shared_data_path
 
     if user_data.shared_data_path is not None and Path(user_data.shared_data_path).exists():
         shared_data = settings_lib.load_shared_data()
@@ -183,23 +186,30 @@ def input_changed(args: adsk.core.InputChangedEventArgs):
 def command_execute(args: adsk.core.CommandEventArgs):
     inputs = args.command.commandInputs
     dropbox_path: adsk.core.StringValueCommandInput = inputs.itemById('dropbox_path')
+    overwrite: adsk.core.BoolValueCommandInput = inputs.itemById('overwrite')
 
     user_data = settings_lib.load_user_data()
     user_data.shared_data_path = dropbox_path.value
+    user_data.overwrite = overwrite.value
     settings_lib.save_user_data(user_data)
 
-    shared_data = settings_lib.load_shared_data()
+    try:
+        shared_data = settings_lib.load_shared_data()
+    except RuntimeError:
+        return
 
-    wood_table: adsk.core.TableCommandInput = inputs.itemById('wood_types')
-    shared_data.wood_materials = list(
-        wood_table.getInputAtPosition(i, 0).value
-        for i in range(1, wood_table.rowCount)
-    )
+    wood_table: adsk.core.TableCommandInput | None = inputs.itemById('wood_types')
+    if wood_table is not None:
+        shared_data.wood_materials = list(
+            wood_table.getInputAtPosition(i, 0).value
+            for i in range(1, wood_table.rowCount)
+        )
 
-    detail_table: adsk.core.TableCommandInput = inputs.itemById('detail_materials')
-    shared_data.detail_materials = list(
-        detail_table.getInputAtPosition(i, 0).value
-        for i in range(1, detail_table.rowCount)
-    )
+    detail_table: adsk.core.TableCommandInput | None = inputs.itemById('detail_materials')
+    if detail_table is not None:
+        shared_data.detail_materials = list(
+            detail_table.getInputAtPosition(i, 0).value
+            for i in range(1, detail_table.rowCount)
+        )
 
     settings_lib.save_shared_data(shared_data)
