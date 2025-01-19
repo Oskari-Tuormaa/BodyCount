@@ -1,0 +1,27 @@
+@startuml diagram
+
+class CMD_Settings
+class CMD_CountBodies
+class CMD_ShowUngrouped
+
+class CountingLib
+
+class ExcelLib
+
+class GraphicsLib
+
+class UserSettings
+class SharedSettings
+
+CMD_Settings --* UserSettings
+CMD_Settings --* SharedSettings
+SharedSettings -* UserSettings
+
+CMD_ShowUngrouped --* CountingLib
+CMD_ShowUngrouped --* GraphicsLib
+
+CMD_CountBodies --* CountingLib
+CMD_CountBodies --* ExcelLib
+CMD_CountBodies --* SharedSettings
+
+@enduml

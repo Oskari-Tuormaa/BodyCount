@@ -1,11 +1,6 @@
 
 # TODO
 
-- [ ] Add per-user settings.
-    - Add "Dropbox path" setting variable, that should point to Vermland folder in Dropbox.
-- [ ] Add Vermland shared settings.
-    - Can hold valid detail and wood materials, as well as defaults.
-    - Path to shared settings is based on "Dropbox path": <dropbox_path/Vermland>/The Collection/BodyCount.
 - [ ] Add command input box to "Count bodies" command.
     - Table for selection of wood type and detail type per grouping (fx. "G_String1" and "G_Island"):
         - Pull list of wood types and detail types from shared settings, as well as "overwrite indicators" (first number in name).
@@ -34,3 +29,8 @@
 - [x] Change "Define Strings" to "Display Ungrouped".
     - "Strings" will be defined by top-level component, with some prefix (fx. "G_String1" and "G_Island").
     - "Display Ungrouped" should mark all ungrouped bodies in transparent red, showing through other components.
+- [x] Add per-user settings.
+    - Add "Dropbox path" setting variable, that should point to Vermland folder in Dropbox.
+- [x] Add Vermland shared settings.
+    - Can hold valid detail and wood materials, as well as defaults.
+    - Path to shared settings is based on "Dropbox path": <dropbox_path>/Vermland/The Collection/BodyCount.
