@@ -7,6 +7,7 @@ from pathlib import Path
 @dataclass
 class SharedData(Serializable):
     detail_materials: list[str] = field(default_factory=lambda: [])
+    wood_materials: list[str] = field(default_factory=lambda: [])
 
 cached_shared_data: SharedData | None = None
 cached_shared_data_time: float = 0
@@ -15,7 +16,7 @@ def get_shared_data_path() -> Path:
     user_data = load_user_data()
     if user_data.shared_data_path is None:
         raise RuntimeError('Cannot load shared data, since shared data path is not set in user settings!')
-    return Path(user_data.shared_data_path)
+    return Path(user_data.shared_data_path)/'Vermland'/'The Collection'/'BodyCount'/'shared_settings.json'
 
 def load_shared_data() -> SharedData:
     global cached_shared_data, cached_shared_data_time
@@ -37,5 +38,6 @@ def load_shared_data() -> SharedData:
 
 def save_shared_data(shared_data: SharedData):
     shared_data_path = get_shared_data_path()
+    shared_data_path.parent.mkdir(parents=True, exist_ok=True)
     with shared_data_path.open('w') as fd:
         fd.write(shared_data.serialize())
