@@ -12,7 +12,7 @@ app = adsk.core.Application.get()
 ui = app.userInterface
 
 REQUIRED_PACKAGES = { 'openpyxl==3.1.0' }
-INSTALLED_PACKAGES = {f'{pkg.metadata['Name']}=={pkg.version}' for pkg in importlib.metadata.distributions()}
+INSTALLED_PACKAGES = {f'{pkg.metadata["Name"]}=={pkg.version}' for pkg in importlib.metadata.distributions()}
 PACKAGES_TO_INSTALL = REQUIRED_PACKAGES - INSTALLED_PACKAGES
 
 # Install Python packages if they're missing
