@@ -71,8 +71,14 @@ def command_created(args: adsk.core.CommandCreatedEventArgs):
     inputs.addTextBoxCommandInput('', '', '<h3><center>User Data</center></h3>', 1, True)
     inputs.addTextBoxCommandInput('', '', '<i><center>These settings are saved locally on your computer.</center></i>', 1, True)
 
+    path_table = inputs.addTableCommandInput('', '', 2, '4:1')
     dropbox_path = inputs.addStringValueInput('dropbox_path', 'Path to Dropbox')
-    inputs.addBoolValueInput('select_folder', 'Select Folder', False)
+    select_button = inputs.addBoolValueInput('select_folder', 'Select Folder', False)
+    path_table.addCommandInput(dropbox_path, 0, 0)
+    path_table.addCommandInput(select_button, 0, 1)
+    path_table.tablePresentationStyle = adsk.core.TablePresentationStyles.transparentBackgroundTablePresentationStyle
+    path_table.minimumVisibleRows = 1
+    path_table.maximumVisibleRows = 1
 
     if user_data.shared_data_path is not None:
         dropbox_path.value = user_data.shared_data_path
@@ -89,6 +95,7 @@ def command_created(args: adsk.core.CommandCreatedEventArgs):
 
         # Wood types table
         wood_table = inputs.addTableCommandInput('wood_types', 'Wood types', 1, '1')
+        wood_table.maximumVisibleRows = 10
         wood_table.tablePresentationStyle = adsk.core.TablePresentationStyles.transparentBackgroundTablePresentationStyle
         wood_title = inputs.addTextBoxCommandInput('', '', '<h4>Wood Types</h4>', 1, True)
         wood_table.addCommandInput(wood_title, 0, 0)
@@ -106,6 +113,7 @@ def command_created(args: adsk.core.CommandCreatedEventArgs):
 
         # Detail materials table
         detail_table = inputs.addTableCommandInput('detail_materials', 'Detail materials', 1, '1')
+        detail_table.maximumVisibleRows = 10
         detail_table.tablePresentationStyle = adsk.core.TablePresentationStyles.transparentBackgroundTablePresentationStyle
         detail_title = inputs.addTextBoxCommandInput('', '', '<h4>Details materials</h4>', 1, True)
         detail_table.addCommandInput(detail_title, 0, 0)
