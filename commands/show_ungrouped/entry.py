@@ -86,9 +86,11 @@ def command_created(args: adsk.core.CommandCreatedEventArgs):
 
             
     if len(root.bRepBodies) > 0:
-        g.add_objs(*root.bRepBodies)
+        visible_bodies = [body for body in root.bRepBodies if body.isVisible]
 
-        for obj in root.bRepBodies:
+        g.add_objs(*visible_bodies)
+
+        for obj in visible_bodies:
             str_inp = inputs.addStringValueInput(f"tbox{i_tbox}", "Tbox", obj.name)
             str_inp.isReadOnly = True
             table.addCommandInput(str_inp, i_tbox, 0)
