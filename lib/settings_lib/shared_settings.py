@@ -1,11 +1,12 @@
 from .user_settings import load_user_data, UserData
-from .util import Serializable
 
-from dataclasses import dataclass, field
+from serde import serde
+from serde.json import to_json, from_json
+from dataclasses import field
 from pathlib import Path
 
-@dataclass
-class SharedData(Serializable):
+@serde
+class SharedData:
     detail_materials: list[str] = field(default_factory=lambda: [])
     wood_materials: list[str] = field(default_factory=lambda: [])
 
@@ -32,7 +33,7 @@ def load_shared_data() -> SharedData:
         cached_shared_data_time != shared_data_path.stat().st_mtime
     ):
         with shared_data_path.open('r') as fd:
-            cached_shared_data = SharedData.deserialize(fd.read())
+            cached_shared_data = from_json(SharedData, fd.read())
             cached_shared_data_time = shared_data_path.stat().st_mtime
     return cached_shared_data
 
@@ -40,4 +41,4 @@ def save_shared_data(shared_data: SharedData):
     shared_data_path = get_shared_data_path()
     shared_data_path.parent.mkdir(parents=True, exist_ok=True)
     with shared_data_path.open('w') as fd:
-        fd.write(shared_data.serialize())
+        fd.write(to_json(shared_data, indent=4))
