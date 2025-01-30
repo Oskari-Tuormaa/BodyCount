@@ -20,7 +20,6 @@ IS_PROMOTED = False
 WORKSPACE_ID = 'FusionSolidEnvironment'
 PANEL_ID = 'BodyCount'
 
-# RESOURCE_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'resources', 'Icon', '')
 RESOURCE_FOLDER = Path(__file__).parent/'resources'/''
 ICON_FOLDER = RESOURCE_FOLDER/'Icon'/''
 ADD_FOLDER = RESOURCE_FOLDER/'Add'/''
@@ -81,7 +80,7 @@ def command_created(args: adsk.core.CommandCreatedEventArgs):
     path_table.maximumVisibleRows = 1
 
     if user_data.shared_data_path is not None:
-        dropbox_path.value = user_data.shared_data_path
+        dropbox_path.value = str(user_data.shared_data_path)
 
     overwrite_check = inputs.addBoolValueInput('overwrite', 'Overwrite excel document', True)
     overwrite_check.value = user_data.overwrite
