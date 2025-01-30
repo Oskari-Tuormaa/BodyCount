@@ -6,7 +6,7 @@ USER_SETTINGS_FILE = Path(__file__).parent.parent.parent/'.user-settings.json'
 
 @serde
 class UserData:
-    shared_data_path: str | None = None
+    shared_data_path: Path | None = None
     overwrite: bool = True
 
 cached_user_data: UserData | None = None
