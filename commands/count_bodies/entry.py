@@ -119,10 +119,11 @@ def command_created(args: adsk.core.CommandCreatedEventArgs):
     inputs = args.command.commandInputs
 
     shared_data = settings_lib.load_shared_data()
+    file_data = settings_lib.load_file_data()
     modules = counting_lib.collect_modules_under(rootComp)
 
     path_table = inputs.addTableCommandInput('', '', 3, '3:6:2')
-    excel_file_path = inputs.addStringValueInput('excel_path', '', '')
+    excel_file_path = inputs.addStringValueInput('excel_path', '', str(file_data.excel_path))
     select_button = inputs.addBoolValueInput('select_folder', 'Select Folder', False)
     path_table.addCommandInput(inputs.addTextBoxCommandInput('', '', '<h4>Path to excel file</h4>', 1, True), 0, 0)
     path_table.addCommandInput(excel_file_path, 0, 1)
@@ -142,11 +143,18 @@ def command_created(args: adsk.core.CommandCreatedEventArgs):
         detail_dropdown = inputs.addDropDownCommandInput('', '', adsk.core.DropDownStyles.TextListDropDownStyle)
         wood_dropdown = inputs.addDropDownCommandInput('', '', adsk.core.DropDownStyles.TextListDropDownStyle)
 
+        selected_detail = None
+        selected_wood = None
+        if group in file_data.modules:
+            module_data = file_data.modules[group]
+            selected_detail = module_data.detail_material
+            selected_wood = module_data.wood_material
+
         for detail_material in shared_data.detail_materials:
-            detail_dropdown.listItems.add(detail_material, False)
+            detail_dropdown.listItems.add(detail_material, detail_material == selected_detail)
 
         for wood_material in shared_data.wood_materials:
-            wood_dropdown.listItems.add(wood_material, False)
+            wood_dropdown.listItems.add(wood_material, wood_material == selected_wood)
 
         module_table.addCommandInput(name_inp, i+1, 0)
         module_table.addCommandInput(detail_dropdown, i+1, 1)
@@ -159,19 +167,36 @@ def command_created(args: adsk.core.CommandCreatedEventArgs):
 def validate_inputs(args: adsk.core.ValidateInputsEventArgs):
     inputs = args.inputs
     wood_table: adsk.core.TableCommandInput = inputs.itemById('modules')
+    file_data = settings_lib.load_file_data()
 
     dropdowns_filled = True
     for i in range(1, wood_table.rowCount):
+        category_name_inp: adsk.core.TextBoxCommandInput = wood_table.getInputAtPosition(i, 0)
         detail_dropdown: adsk.core.DropDownCommandInput = wood_table.getInputAtPosition(i, 1)
         wood_dropdown: adsk.core.DropDownCommandInput = wood_table.getInputAtPosition(i, 2)
 
+        category_name = category_name_inp.formattedText
+        if category_name in file_data.modules:
+            detail_material = detail_dropdown.selectedItem
+            wood_material = wood_dropdown.selectedItem
+            file_data.modules[category_name].detail_material = detail_material.name if detail_material is not None else None
+            file_data.modules[category_name].wood_material = wood_material.name if wood_material is not None else None
+        else:
+            file_data.modules[category_name] = settings_lib.ModuleSettings(
+                category_name=category_name,
+                detail_material=detail_dropdown.selectedItem,
+                wood_material=wood_dropdown.selectedItem
+            )
+
         if detail_dropdown.selectedItem is None or wood_dropdown.selectedItem is None:
             dropdowns_filled = False
-            break
 
     excel_path_inp: adsk.core.StringValueCommandInput = inputs.itemById('excel_path')
     excel_path = Path(excel_path_inp.value)
     is_valid_excel_path = excel_path.is_absolute() and excel_path.is_file()
+
+    file_data.excel_path = excel_path
+    settings_lib.save_file_data(file_data)
     
     args.areInputsValid = dropdowns_filled and is_valid_excel_path
 
