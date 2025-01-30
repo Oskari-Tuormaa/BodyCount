@@ -11,7 +11,7 @@ from .lib import fusionAddInUtils as futil
 app = adsk.core.Application.get()
 ui = app.userInterface
 
-REQUIRED_PACKAGES = { 'openpyxl==3.1.0', 'pyserde==0.23.0' }
+REQUIRED_PACKAGES = { 'pyserde==0.23.0', 'pypiwin32==223', 'exceltypes==0.0.2' }
 INSTALLED_PACKAGES = {f'{pkg.metadata["Name"]}=={pkg.version}' for pkg in importlib.metadata.distributions()}
 PACKAGES_TO_INSTALL = REQUIRED_PACKAGES - INSTALLED_PACKAGES
 
@@ -28,7 +28,11 @@ try:
         if python_path.stem != "python":
             python_path = python_path.parent/'Python'/'python.exe'
 
-        subprocess.check_call([python_path, '-m', 'pip', 'install', *PACKAGES_TO_INSTALL])
+        p = subprocess.Popen([python_path, '-m', 'ensurepip'])
+        p.wait()
+
+        p = subprocess.Popen([python_path, '-m', 'pip', 'install', *PACKAGES_TO_INSTALL, '--user'])
+        p.wait()
 
         ui.messageBox("Package install done. Please restart Fusion.")
         sys.exit(0)

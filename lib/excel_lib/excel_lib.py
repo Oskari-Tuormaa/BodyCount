@@ -1,11 +1,26 @@
-from openpyxl.workbook import Workbook
+import win32com.client
 
-from .custom_table import CustomTable
+
+from ... import config
 from .fusion_dataclasses import Body, Module
+
+from exceltypes import Application, Workbook, Worksheet, ListObject, Range
 
 BODY_TABLE_NAME = "IndividualParts"
 MODULE_TABLE_NAME = "ModulesParts"
 SHEET_NAME = "LinkFusion"
+
+def open_excel_doc(excel_file_path: str) -> Workbook:
+    """Opens Excel document at given path."""
+    excel: Application = win32com.client.Dispatch('Excel.Application')
+    excel.Visible = config.DEBUG
+    excel.DisplayAlerts = False
+    return excel.Workbooks.Open(excel_file_path)
+
+def save_and_quit(workbook: Workbook, save_path: str):
+    """Saves and closes given Excel workbook at given path."""
+    workbook.SaveAs(save_path, ConflictResolution=2)
+    workbook.Application.Quit()
 
 def write_bodies_to_table(workbook: Workbook, bodies: list[Body]):
     """Populates the Bodies table in the given workbook.
@@ -16,15 +31,23 @@ def write_bodies_to_table(workbook: Workbook, bodies: list[Body]):
     @param workbook The workbook in which to populate the Bodies table.
     @param bodies A list containing the data to populate the table with.
     """
-    sheet = workbook[SHEET_NAME]
-    body_table = CustomTable(sheet, sheet.tables[BODY_TABLE_NAME])
-    
     # Convert list of bodies to 2d array
     body_table_data = []
     for body in bodies:
         body_table_data.append([body.name, body.count, body.material])
 
-    body_table.set_data(body_table_data)
+    sheet: Worksheet = workbook.Sheets(SHEET_NAME)
+    table: ListObject = sheet.ListObjects(BODY_TABLE_NAME)
+
+    table.DataBodyRange.Clear()
+
+    start_cell: Range = table.Range.Cells(1, 1)
+    end_cell: Range = start_cell.Offset(len(bodies)+1, 3)
+    new_range: Range = sheet.Range(start_cell, end_cell)
+
+    table.Resize(new_range)
+    table.DataBodyRange.Value = body_table_data
+
 
 def write_modules_to_table(workbook: Workbook, modules: list[Module]):
     """Populates the Modules table in the given workbook.
@@ -35,13 +58,20 @@ def write_modules_to_table(workbook: Workbook, modules: list[Module]):
     @param workbook The workbook in which to populate the Modules table.
     @param modules A list containing the data to populate the table with.
     """
-    sheet = workbook[SHEET_NAME]
-    module_table = CustomTable(sheet, sheet.tables[MODULE_TABLE_NAME])
-
     # Convert list of modules to 2d array
     module_table_data = []
     for id, module in enumerate(modules):
         for body in module.bodies:
             module_table_data.append([module.category, id+1, module.name, body.name, body.count])
 
-    module_table.set_data(module_table_data)
+    sheet: Worksheet = workbook.Sheets(SHEET_NAME)
+    table: ListObject = sheet.ListObjects(MODULE_TABLE_NAME)
+
+    table.DataBodyRange.Clear()
+
+    start_cell: Range = table.Range.Cells(1, 1)
+    end_cell: Range = start_cell.Offset(len(module_table_data)+1, 5)
+    new_range: Range = sheet.Range(start_cell, end_cell)
+
+    table.Resize(new_range)
+    table.DataBodyRange.Value = module_table_data

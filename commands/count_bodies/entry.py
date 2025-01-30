@@ -3,14 +3,13 @@ import adsk.fusion
 import os
 import json
 
-import openpyxl as op
-from openpyxl.workbook import Workbook
-
 from ...lib import fusionAddInUtils as futil
 from ...lib import counting_lib, excel_lib, settings_lib
 from ... import config
 
 from pathlib import Path
+
+from exceltypes import Workbook
 
 app = adsk.core.Application.get()
 ui = app.userInterface
@@ -83,29 +82,22 @@ def get_input_file_path() -> str | None:
     return open_dialog.filename
 
 
-def get_output_file_path() -> str | None:
-    save_dialog = ui.createFileDialog()
-    save_dialog.title = "Select output excel file"
-    save_dialog.filter = "Excel file (*.xls;*.xlsx;*.xlsm);;All files (*)"
-    save_dialog.showSave()
-    return save_dialog.filename
-
-
 def try_saving_workbook(workbook: Workbook, path: str):
     while True:
         try:
-            workbook.save(path)
+            excel_lib.save_and_quit(workbook, path)
             return
-        except PermissionError:
+        except:
             button = ui.messageBox(
                 "The file is probably open in excel. Please close the file and try again.",
-                "Permission error",
+                "Failed to save Excel file",
                 adsk.core.MessageBoxButtonTypes.RetryCancelButtonType,
             )
 
             # If user pressed Cancel, we stop the infinite loop
             # by returning.
             if button == adsk.core.DialogResults.DialogCancel:
+                # TODO: Log err that stopped user from saving
                 return
 
 
@@ -226,13 +218,13 @@ def command_execute(args: adsk.core.CommandEventArgs):
     excel_path_input: adsk.core.StringValueCommandInput = inputs.itemById('excel_path')
     excel_path = excel_path_input.value
 
-    workbook = op.open(excel_path, keep_vba=True, keep_links=True, rich_text=True)
+    workbook = excel_lib.open_excel_doc(excel_path)
 
     excel_lib.write_bodies_to_table(workbook, bodies)
     excel_lib.write_modules_to_table(workbook, modules)
 
-    # output_file_path = get_output_file_path()
-    # if not output_file_path:
-    #     return
+    # futil.log("Added data to excel...")
 
-    try_saving_workbook(workbook, excel_path)
+    try_saving_workbook(workbook, str(excel_path))
+
+    futil.log("Saved workbook...")
