@@ -22,6 +22,22 @@ def save_and_quit(workbook: Workbook, save_path: str):
     workbook.SaveAs(save_path, ConflictResolution=2)
     workbook.Application.Quit()
 
+def set_table_data(sheet: Worksheet, table: ListObject, data: list[list]):
+    data_n_cols = len(data[0]) if data else 0
+    table_n_cols = table.Range.Columns.Count
+
+    assert data_n_cols == table_n_cols, \
+        f"Mismatched amount of columns in data and table: {data_n_cols=} != {table_n_cols=}"
+
+    table.DataBodyRange.Clear()
+
+    start_cell: Range = table.Range.Cells(1, 1)
+    end_cell: Range = start_cell.Offset(len(data)+1, len(data[0]) if data else 0)
+    new_range: Range = sheet.Range(start_cell, end_cell)
+
+    table.Resize(new_range)
+    table.DataBodyRange.Value = data
+
 def write_bodies_to_table(workbook: Workbook, bodies: list[Body]):
     """Populates the Bodies table in the given workbook.
 
@@ -38,15 +54,7 @@ def write_bodies_to_table(workbook: Workbook, bodies: list[Body]):
 
     sheet: Worksheet = workbook.Sheets(SHEET_NAME)
     table: ListObject = sheet.ListObjects(BODY_TABLE_NAME)
-
-    table.DataBodyRange.Clear()
-
-    start_cell: Range = table.Range.Cells(1, 1)
-    end_cell: Range = start_cell.Offset(len(bodies)+1, 3)
-    new_range: Range = sheet.Range(start_cell, end_cell)
-
-    table.Resize(new_range)
-    table.DataBodyRange.Value = body_table_data
+    set_table_data(sheet, table, body_table_data)
 
 
 def write_modules_to_table(workbook: Workbook, modules: list[Module]):
@@ -66,12 +74,4 @@ def write_modules_to_table(workbook: Workbook, modules: list[Module]):
 
     sheet: Worksheet = workbook.Sheets(SHEET_NAME)
     table: ListObject = sheet.ListObjects(MODULE_TABLE_NAME)
-
-    table.DataBodyRange.Clear()
-
-    start_cell: Range = table.Range.Cells(1, 1)
-    end_cell: Range = start_cell.Offset(len(module_table_data)+1, 5)
-    new_range: Range = sheet.Range(start_cell, end_cell)
-
-    table.Resize(new_range)
-    table.DataBodyRange.Value = module_table_data
+    set_table_data(sheet, table, module_table_data)
