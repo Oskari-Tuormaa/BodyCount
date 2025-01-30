@@ -32,7 +32,7 @@ def traverse_occurrences(
 
         if depth is None:
             yield from traverse_occurrences(occ, predicate=predicate, depth=None)
-        elif not depth <= 0:
+        elif depth > 0:
             yield from traverse_occurrences(occ, predicate=predicate, depth=depth - 1)
 
         if predicate is None or predicate(occ):
@@ -72,7 +72,7 @@ def filter_name(name: str) -> str:
 def collect_bodies_under(root: adsk.fusion.Component | adsk.fusion.Occurrence) -> list[Body]:
     BODY_NAME_IGNORE_FILTERS = [
         re.compile(r'^Body\d+$'),
-        re.compile(r'^delete$', re.IGNORECASE),
+        re.compile(r'^delete', re.IGNORECASE),
     ]
 
     bodies_dict: dict[tuple[str, str], Body] = {}
