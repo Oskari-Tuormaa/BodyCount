@@ -1,7 +1,7 @@
 import adsk.core
 import adsk.fusion
 import os
-import json
+import re
 
 from ...lib import fusionAddInUtils as futil
 from ...lib import counting_lib, excel_lib, settings_lib
@@ -159,26 +159,11 @@ def command_created(args: adsk.core.CommandCreatedEventArgs):
 def validate_inputs(args: adsk.core.ValidateInputsEventArgs):
     inputs = args.inputs
     wood_table: adsk.core.TableCommandInput = inputs.itemById('modules')
-    file_data = settings_lib.load_file_data()
 
     dropdowns_filled = True
     for i in range(1, wood_table.rowCount):
-        category_name_inp: adsk.core.TextBoxCommandInput = wood_table.getInputAtPosition(i, 0)
         detail_dropdown: adsk.core.DropDownCommandInput = wood_table.getInputAtPosition(i, 1)
         wood_dropdown: adsk.core.DropDownCommandInput = wood_table.getInputAtPosition(i, 2)
-
-        category_name = category_name_inp.formattedText
-        if category_name in file_data.modules:
-            detail_material = detail_dropdown.selectedItem
-            wood_material = wood_dropdown.selectedItem
-            file_data.modules[category_name].detail_material = detail_material.name if detail_material is not None else None
-            file_data.modules[category_name].wood_material = wood_material.name if wood_material is not None else None
-        else:
-            file_data.modules[category_name] = settings_lib.ModuleSettings(
-                category_name=category_name,
-                detail_material=detail_dropdown.selectedItem,
-                wood_material=wood_dropdown.selectedItem
-            )
 
         if detail_dropdown.selectedItem is None or wood_dropdown.selectedItem is None:
             dropdowns_filled = False
@@ -187,10 +172,36 @@ def validate_inputs(args: adsk.core.ValidateInputsEventArgs):
     excel_path = Path(excel_path_inp.value)
     is_valid_excel_path = excel_path.is_absolute() and excel_path.is_file()
 
-    file_data.excel_path = excel_path
-    settings_lib.save_file_data(file_data)
-    
     args.areInputsValid = dropdowns_filled and is_valid_excel_path
+
+
+def update_file_data(inputs: adsk.core.CommandInputs):
+    file_data = settings_lib.load_file_data()
+    modules_table: adsk.core.TableCommandInput = inputs.itemById('modules')
+    # TODO: Fix saving of file data
+
+    for i in range(1, modules_table.rowCount):
+        category_name_inp: adsk.core.TextBoxCommandInput = modules_table.getInputAtPosition(i, 0)
+        detail_dropdown: adsk.core.DropDownCommandInput = modules_table.getInputAtPosition(i, 1)
+        wood_dropdown: adsk.core.DropDownCommandInput = modules_table.getInputAtPosition(i, 2)
+
+        detail_material = detail_dropdown.selectedItem.name if detail_dropdown.selectedItem is not None else None
+        wood_material = wood_dropdown.selectedItem.name if wood_dropdown.selectedItem is not None else None
+
+        category_name = category_name_inp.formattedText
+        if category_name in file_data.modules:
+            file_data.modules[category_name].detail_material = detail_material
+            file_data.modules[category_name].wood_material = wood_material
+        else:
+            file_data.modules[category_name] = settings_lib.ModuleSettings(
+                category_name=category_name,
+                detail_material=detail_material,
+                wood_material=wood_material
+            )
+
+    excel_path_inp: adsk.core.StringValueCommandInput = inputs.itemById('excel_path')
+    file_data.excel_path = Path(excel_path_inp.value)
+    settings_lib.save_file_data(file_data)
 
 
 def input_changed(args: adsk.core.InputChangedEventArgs):
@@ -203,6 +214,8 @@ def input_changed(args: adsk.core.InputChangedEventArgs):
             return
         excel_path_input: adsk.core.StringValueCommandInput = inputs.itemById('excel_path')
         excel_path_input.value = new_path
+    
+    update_file_data(inputs)
 
 
 def command_execute(args: adsk.core.CommandEventArgs):
@@ -212,8 +225,46 @@ def command_execute(args: adsk.core.CommandEventArgs):
 
     inputs = args.command.commandInputs
 
-    bodies  = counting_lib.collect_bodies_under(rootComp)
+    modules_dict: dict[str, tuple[str, str]] = {}
+    modules_table = inputs.itemById("modules")
+    for i in range(1, modules_table.rowCount):
+        category_name_inp: adsk.core.TextBoxCommandInput = modules_table.getInputAtPosition(i, 0)
+        detail_dropdown: adsk.core.DropDownCommandInput = modules_table.getInputAtPosition(i, 1)
+        wood_dropdown: adsk.core.DropDownCommandInput = modules_table.getInputAtPosition(i, 2)
+        modules_dict[category_name_inp.formattedText] = (
+            detail_dropdown.selectedItem.name,
+            wood_dropdown.selectedItem.name
+        )
+
     modules = counting_lib.collect_modules_under(rootComp)
+
+    MATCH_WOOD_PATTERN = re.compile(r"^(9[7-9]\..*? )?([1-9]|12|1[4-6])\.")
+    MATCH_DETAIL_PATTERN = re.compile(r"^(9[7-9]\..*? )?10\.")
+
+    bodies_dict: dict[tuple[str, str], counting_lib.Body] = {}
+    for module in modules:
+        detail_type, wood_type = modules_dict[module.category]
+
+        for body in module.bodies:
+            material = body.material
+
+            if MATCH_WOOD_PATTERN.match(body.name):
+                material = wood_type
+            elif MATCH_DETAIL_PATTERN.match(body.name):
+                material = detail_type
+
+            key = (body.name, material)
+
+            if key not in bodies_dict:
+                bodies_dict[key] = counting_lib.Body(
+                    name=body.name,
+                    count=0,
+                    material=material,
+                )
+            bodies_dict[key].count += body.count
+    
+    bodies = list(bodies_dict.values())
+    counting_lib.human_sort(bodies, key=lambda x: x.name)
 
     excel_path_input: adsk.core.StringValueCommandInput = inputs.itemById('excel_path')
     excel_path = excel_path_input.value
@@ -223,8 +274,4 @@ def command_execute(args: adsk.core.CommandEventArgs):
     excel_lib.write_bodies_to_table(workbook, bodies)
     excel_lib.write_modules_to_table(workbook, modules)
 
-    # futil.log("Added data to excel...")
-
     try_saving_workbook(workbook, str(excel_path))
-
-    futil.log("Saved workbook...")

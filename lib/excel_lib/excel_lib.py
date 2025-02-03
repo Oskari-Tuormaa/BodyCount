@@ -23,6 +23,7 @@ def save_and_quit(workbook: Workbook, save_path: str):
     workbook.Application.Quit()
 
 def set_table_data(sheet: Worksheet, table: ListObject, data: list[list]):
+    # TODO: Handle empty data
     data_n_cols = len(data[0]) if data else 0
     table_n_cols = table.Range.Columns.Count
 
