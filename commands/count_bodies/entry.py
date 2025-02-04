@@ -82,25 +82,6 @@ def get_input_file_path() -> str | None:
     return open_dialog.filename
 
 
-def try_saving_workbook(workbook: Workbook, path: str):
-    while True:
-        try:
-            excel_lib.save_and_quit(workbook, path)
-            return
-        except:
-            button = ui.messageBox(
-                "The file is probably open in excel. Please close the file and try again.",
-                "Failed to save Excel file",
-                adsk.core.MessageBoxButtonTypes.RetryCancelButtonType,
-            )
-
-            # If user pressed Cancel, we stop the infinite loop
-            # by returning.
-            if button == adsk.core.DialogResults.DialogCancel:
-                # TODO: Log err that stopped user from saving
-                return
-
-
 def command_created(args: adsk.core.CommandCreatedEventArgs):
     futil.log("creating count_bodies")
 
@@ -269,9 +250,15 @@ def command_execute(args: adsk.core.CommandEventArgs):
     excel_path_input: adsk.core.StringValueCommandInput = inputs.itemById('excel_path')
     excel_path = excel_path_input.value
 
-    workbook = excel_lib.open_excel_doc(excel_path)
+    try:
+        workbook = excel_lib.open_excel_doc(excel_path)
+    except Exception as e:
+        if adsk.core.DialogResults.DialogCancel in e.args:
+            return
+        raise
 
     excel_lib.write_bodies_to_table(workbook, bodies)
     excel_lib.write_modules_to_table(workbook, modules)
 
-    try_saving_workbook(workbook, str(excel_path))
+    excel_lib.save(workbook, str(excel_path))
+    excel_lib.close(workbook)

@@ -1,5 +1,5 @@
+import adsk.core
 import win32com.client
-
 
 from ... import config
 from .fusion_dataclasses import Body, Module
@@ -10,16 +10,42 @@ BODY_TABLE_NAME = "IndividualParts"
 MODULE_TABLE_NAME = "ModulesParts"
 SHEET_NAME = "LinkFusion"
 
+def wait_until_excel_file_closed(file_path: str):
+    app = adsk.core.Application.get()
+    ui = app.userInterface
+
+    while True:
+        try:
+            with open(file_path, 'a'):
+                break
+        except IOError:
+            pass
+        
+        button = ui.messageBox(
+            "The file is probably already open. Please close the file and try again.",
+            "Failed to open Excel file",
+            adsk.core.MessageBoxButtonTypes.RetryCancelButtonType,
+        )
+
+        # If user pressed Cancel, we stop the infinite loop
+        # by returning.
+        if button == adsk.core.DialogResults.DialogCancel:
+            raise RuntimeError(adsk.core.DialogResults.DialogCancel)
+
 def open_excel_doc(excel_file_path: str) -> Workbook:
     """Opens Excel document at given path."""
+    wait_until_excel_file_closed(excel_file_path)
     excel: Application = win32com.client.Dispatch('Excel.Application')
-    excel.Visible = config.DEBUG
+    excel.Visible = False # config.DEBUG
     excel.DisplayAlerts = False
-    return excel.Workbooks.Open(excel_file_path)
+    return excel.Workbooks.Open(excel_file_path, ReadOnly=False, Editable=False)
 
-def save_and_quit(workbook: Workbook, save_path: str):
-    """Saves and closes given Excel workbook at given path."""
+def save(workbook: Workbook, save_path: str):
+    """Saves given Excel workbook at given path."""
     workbook.SaveAs(save_path, ConflictResolution=2)
+
+def close(workbook: Workbook):
+    """Closes given Excel workbook."""
     workbook.Application.Quit()
 
 def set_table_data(sheet: Worksheet, table: ListObject, data: list[list]):
