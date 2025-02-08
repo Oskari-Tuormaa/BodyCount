@@ -1,8 +1,6 @@
 
 # TODO
 
-- [ ] Fix textboxes in command menus being too small, and being hidden by scrollbars.
-
 - [ ] Add assertions and nicer output to excel_lib.
     - Missing sheet/tables.
     - Wrong column count in tables.
@@ -12,6 +10,9 @@
     - Pull list of "overwrite indicators" (first number in name).
 
 # WIP
+
+- [?] Fix textboxes in command menus being too small, and being hidden by scrollbars.
+    - **Might have fixed it, but it's hard to tell on my screen, since it looked fine before for me...**
 
 # Done
 

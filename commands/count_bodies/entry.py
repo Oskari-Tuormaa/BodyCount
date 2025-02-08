@@ -89,6 +89,8 @@ def command_created(args: adsk.core.CommandCreatedEventArgs):
     design = adsk.fusion.Design.cast(product)
     rootComp = design.rootComponent
 
+    args.command.setDialogMinimumSize(600, 100)
+
     inputs = args.command.commandInputs
 
     shared_data = settings_lib.load_shared_data()
@@ -98,7 +100,7 @@ def command_created(args: adsk.core.CommandCreatedEventArgs):
     path_table = inputs.addTableCommandInput('', '', 3, '3:6:2')
     excel_file_path = inputs.addStringValueInput('excel_path', '', str(file_data.excel_path))
     select_button = inputs.addBoolValueInput('select_folder', 'Select Folder', False)
-    path_table.addCommandInput(inputs.addTextBoxCommandInput('', '', '<h4>Path to excel file</h4>', 1, True), 0, 0)
+    path_table.addCommandInput(inputs.addTextBoxCommandInput('', '', '<b>Path to excel file</b>', 6, True), 0, 0)
     path_table.addCommandInput(excel_file_path, 0, 1)
     path_table.addCommandInput(select_button, 0, 2)
     path_table.tablePresentationStyle = adsk.core.TablePresentationStyles.transparentBackgroundTablePresentationStyle
@@ -106,9 +108,9 @@ def command_created(args: adsk.core.CommandCreatedEventArgs):
     path_table.maximumVisibleRows = 1
 
     module_table = inputs.addTableCommandInput('modules', 'Modules', 3, '1:1:1')
-    module_table.addCommandInput(inputs.addTextBoxCommandInput('', '', '<h3>Category</h3>', 1, True), 0, 0)
-    module_table.addCommandInput(inputs.addTextBoxCommandInput('', '', '<h3>Detail material</h3>', 1, True), 0, 1)
-    module_table.addCommandInput(inputs.addTextBoxCommandInput('', '', '<h3>Wood material</h3>', 1, True), 0, 2)
+    module_table.addCommandInput(inputs.addTextBoxCommandInput('', '', '<b>Category</b>', 1, True), 0, 0)
+    module_table.addCommandInput(inputs.addTextBoxCommandInput('', '', '<b>Detail material</b>', 1, True), 0, 1)
+    module_table.addCommandInput(inputs.addTextBoxCommandInput('', '', '<b>Wood material</b>', 1, True), 0, 2)
 
     groups = {module.category for module in modules}
     for i, group in enumerate(groups):

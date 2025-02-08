@@ -68,7 +68,7 @@ def command_created(args: adsk.core.CommandCreatedEventArgs):
     inputs = args.command.commandInputs
 
     inputs.addTextBoxCommandInput('', '', '<h3><center>User Data</center></h3>', 1, True)
-    inputs.addTextBoxCommandInput('', '', '<i><center>These settings are saved locally on your computer.</center></i>', 1, True)
+    inputs.addTextBoxCommandInput('', '', '<i><center>These settings are saved locally on your computer.</center></i>', 4, True)
 
     path_table = inputs.addTableCommandInput('', '', 2, '4:1')
     dropbox_path = inputs.addStringValueInput('dropbox_path', 'Path to Dropbox')
@@ -87,7 +87,7 @@ def command_created(args: adsk.core.CommandCreatedEventArgs):
 
     inputs.addSeparatorCommandInput('')
     inputs.addTextBoxCommandInput('', '', '<h3><center>Shared Data</center></h3>', 1, True)
-    inputs.addTextBoxCommandInput('', '', '<i><center>These settings are saved in Dropbox.</center></i>', 1, True)
+    inputs.addTextBoxCommandInput('', '', '<i><center>These settings are saved in Dropbox.</center></i>', 4, True)
 
     if user_data.shared_data_path is not None and Path(user_data.shared_data_path).exists():
         shared_data = settings_lib.load_shared_data()
@@ -128,7 +128,9 @@ def command_created(args: adsk.core.CommandCreatedEventArgs):
                 i+1, 0
             )
     else:
-        inputs.addTextBoxCommandInput('', '', '<i><center>Set <b>Path to Dropbox</b> to a valid path to access shared settings.<br>Note that command must be ok\'d and opened again for change to take effect.</center></i>', 2, True)
+        inputs.addTextBoxCommandInput('', '', '<i><center>Set <b>Path to Dropbox</b> to a valid path to access shared settings.<br>Note that command must be ok\'d and opened again for change to take effect.</center></i>', 10, True)
+
+    print(args.command.setDialogMinimumSize(300, 200))
 
     futil.add_handler(args.command.execute, command_execute)
     futil.add_handler(args.command.inputChanged, input_changed)
