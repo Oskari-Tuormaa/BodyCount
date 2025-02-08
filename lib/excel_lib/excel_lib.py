@@ -36,7 +36,7 @@ def open_excel_doc(excel_file_path: str) -> Workbook:
     """Opens Excel document at given path."""
     wait_until_excel_file_closed(excel_file_path)
     excel: Application = win32com.client.Dispatch('Excel.Application')
-    excel.Visible = False # config.DEBUG
+    excel.Visible = config.DEBUG
     excel.DisplayAlerts = False
     return excel.Workbooks.Open(excel_file_path, ReadOnly=False, Editable=False)
 

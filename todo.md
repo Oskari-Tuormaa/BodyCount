@@ -1,9 +1,6 @@
 
 # TODO
 
-- [ ] Updates to command input:
-    - Pull list of "overwrite indicators" (first number in name).
-    - Save "excel file" path on project basis, replacing part of path with per-user "Dropbox path".
 - [ ] Fix textboxes in command menus being too small, and being hidden by scrollbars.
 
 - [ ] Add assertions and nicer output to excel_lib.
@@ -11,6 +8,8 @@
     - Wrong column count in tables.
 
 - [ ] Add check for newer BodyCount release, and automatic update.
+- [ ] Updates to command input:
+    - Pull list of "overwrite indicators" (first number in name).
 
 # WIP
 
@@ -41,3 +40,4 @@
         - All others: Use internal Fusion material
         - OBS: Names starting with 97-98 should use number following the first space to determine material.
             - Ex: "98.1_Modified 5.2_Front_W592_H389" should use 5 and "98.1_Modified 10.2_DrawerBolt" should use 10.
+    - Save "excel file" path on project basis, replacing part of path with per-user "Dropbox path".

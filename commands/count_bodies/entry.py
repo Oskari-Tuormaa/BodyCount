@@ -73,13 +73,13 @@ def stop():
         panel.deleteMe()
 
 
-def get_input_file_path() -> str | None:
+def get_input_file_path() -> Path | None:
     open_dialog = ui.createFileDialog()
     open_dialog.title = "Select input excel file"
     open_dialog.isMultiSelectEnabled = False
     open_dialog.filter = "Excel file (*.xls;*.xlsx;*.xlsm);;All files (*)"
-    open_dialog.showOpen()
-    return open_dialog.filename
+    if open_dialog.showOpen() == adsk.core.DialogResults.DialogOK:
+        return Path(open_dialog.filename)
 
 
 def command_created(args: adsk.core.CommandCreatedEventArgs):
@@ -194,9 +194,7 @@ def input_changed(args: adsk.core.InputChangedEventArgs):
         if new_path is None:
             return
         excel_path_input: adsk.core.StringValueCommandInput = inputs.itemById('excel_path')
-        excel_path_input.value = new_path
-    
-    update_file_data(inputs)
+        excel_path_input.value = str(new_path)
 
 
 def command_execute(args: adsk.core.CommandEventArgs):
@@ -205,6 +203,8 @@ def command_execute(args: adsk.core.CommandEventArgs):
     rootComp = design.rootComponent
 
     inputs = args.command.commandInputs
+    
+    update_file_data(inputs)
 
     modules_dict: dict[str, tuple[str, str]] = {}
     modules_table = inputs.itemById("modules")
@@ -260,5 +260,5 @@ def command_execute(args: adsk.core.CommandEventArgs):
     excel_lib.write_bodies_to_table(workbook, bodies)
     excel_lib.write_modules_to_table(workbook, modules)
 
-    excel_lib.save(workbook, str(excel_path))
+    excel_lib.save(workbook, excel_path)
     excel_lib.close(workbook)
