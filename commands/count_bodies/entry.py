@@ -161,7 +161,6 @@ def validate_inputs(args: adsk.core.ValidateInputsEventArgs):
 def update_file_data(inputs: adsk.core.CommandInputs):
     file_data = settings_lib.load_file_data()
     modules_table: adsk.core.TableCommandInput = inputs.itemById('modules')
-    # TODO: Fix saving of file data
 
     for i in range(1, modules_table.rowCount):
         category_name_inp: adsk.core.TextBoxCommandInput = modules_table.getInputAtPosition(i, 0)
@@ -259,8 +258,9 @@ def command_execute(args: adsk.core.CommandEventArgs):
             return
         raise
 
-    excel_lib.write_bodies_to_table(workbook, bodies)
-    excel_lib.write_modules_to_table(workbook, modules)
-
-    excel_lib.save(workbook, excel_path)
-    excel_lib.close(workbook)
+    try:
+        excel_lib.write_bodies_to_table(workbook, bodies)
+        excel_lib.write_modules_to_table(workbook, modules)
+        excel_lib.save(workbook, excel_path)
+    finally:
+        excel_lib.close(workbook)

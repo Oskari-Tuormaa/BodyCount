@@ -1,5 +1,6 @@
 import adsk.core
 import win32com.client
+import pythoncom
 
 from ... import config
 from .fusion_dataclasses import Body, Module
@@ -34,11 +35,12 @@ def wait_until_excel_file_closed(file_path: str):
 
 def open_excel_doc(excel_file_path: str) -> Workbook:
     """Opens Excel document at given path."""
+    pythoncom.CoInitialize()
     wait_until_excel_file_closed(excel_file_path)
     excel: Application = win32com.client.Dispatch('Excel.Application')
     excel.Visible = config.DEBUG
     excel.DisplayAlerts = False
-    return excel.Workbooks.Open(excel_file_path, ReadOnly=False, Editable=False)
+    return excel.Workbooks.Open(excel_file_path, ReadOnly=False, Editable=True)
 
 def save(workbook: Workbook, save_path: str):
     """Saves given Excel workbook at given path."""
@@ -46,7 +48,10 @@ def save(workbook: Workbook, save_path: str):
 
 def close(workbook: Workbook):
     """Closes given Excel workbook."""
-    workbook.Application.Quit()
+    try:
+        workbook.Application.Quit()
+    finally:
+        pythoncom.CoUninitialize()
 
 def set_table_data(sheet: Worksheet, table: ListObject, data: list[list]):
     # TODO: Handle empty data
