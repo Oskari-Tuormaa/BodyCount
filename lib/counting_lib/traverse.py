@@ -91,6 +91,20 @@ def collect_bodies_under(root: adsk.fusion.Component | adsk.fusion.Occurrence) -
         if key not in bodies_dict:
             bodies_dict[key] = Body(name, 0, material)
         bodies_dict[key].count += 1
+
+    # Count FSA's
+    for occ in traverse_occurrences(root, predicate=lambda x: "FSA" in x.name):
+        name = filter_name(occ.component.name)
+
+        if any([pattern.match(name) for pattern in BODY_NAME_IGNORE_FILTERS]):
+            continue
+
+        material = ""
+        key = (name, material)
+
+        if key not in bodies_dict:
+            bodies_dict[key] = Body(name, 0, material)
+        bodies_dict[key].count += 1
     
     # Sort Body list based on the name
     bodies_list = list(bodies_dict.values())
