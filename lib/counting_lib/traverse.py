@@ -93,7 +93,8 @@ def collect_bodies_under(root: adsk.fusion.Component | adsk.fusion.Occurrence) -
         bodies_dict[key].count += 1
 
     # Count FSA's
-    for occ in traverse_occurrences(root, predicate=lambda x: "FSA" in x.name):
+    FSA_match_pattern = re.compile(r"^(9[7-9]\..*? )?9\.")
+    for occ in traverse_occurrences(root, predicate=lambda x: FSA_match_pattern.match(x.name)):
         name = filter_name(occ.component.name)
 
         if any([pattern.match(name) for pattern in BODY_NAME_IGNORE_FILTERS]):
