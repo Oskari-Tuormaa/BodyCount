@@ -71,8 +71,6 @@ def command_created(args: adsk.core.CommandCreatedEventArgs):
     table = inputs.addTableCommandInput('table', 'Ungrouped Items', 1, '1')
     i_tbox = 0
 
-    modules = counting_lib.collect_modules_under(root)
-
     for top_lvl_occ in counting_lib.traverse_occurrences(root, depth=0):
         if top_lvl_occ.name.startswith('G_'):
             continue
@@ -98,15 +96,9 @@ def command_created(args: adsk.core.CommandCreatedEventArgs):
 
     futil.add_handler(args.command.execute, command_execute)
     futil.add_handler(args.command.destroy, command_destroy)
-    futil.add_handler(args.command.executePreview, command_execute_preview)
 
 def command_execute(args: adsk.core.CommandEventArgs):
-    futil.log("Executing show_ungrouped!")
-
     selection_graphics.clear()
 
 def command_destroy(args: adsk.core.CommandEventArgs):
     selection_graphics.clear()
-
-def command_execute_preview(args: adsk.core.CommandEventArgs):
-    futil.log("Preview!")

@@ -83,7 +83,7 @@ def get_input_file_path() -> Path | None:
 
 
 def command_created(args: adsk.core.CommandCreatedEventArgs):
-    futil.log("creating count_bodies")
+    futil.log("Creating count_bodies")
 
     product = app.activeProduct
     design = adsk.fusion.Design.cast(product)
@@ -250,6 +250,9 @@ def command_execute(args: adsk.core.CommandEventArgs):
 
     excel_path_input: adsk.core.StringValueCommandInput = inputs.itemById('excel_path')
     excel_path = excel_path_input.value
+
+    if excel_path == "":
+        return
 
     try:
         workbook = excel_lib.open_excel_doc(excel_path)
