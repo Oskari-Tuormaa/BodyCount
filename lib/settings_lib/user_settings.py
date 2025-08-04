@@ -1,8 +1,10 @@
+import os
+
 from pathlib import Path
 from serde import serde
 from serde.json import to_json, from_json
 
-USER_SETTINGS_FILE = Path(__file__).parent.parent.parent/'.user-settings.json'
+USER_SETTINGS_FILE = Path('/')/'Users'/os.getlogin()/'Documents'/'.user-settings.json'
 
 @serde
 class UserData:
@@ -13,6 +15,7 @@ cached_user_data_time: float = 0
 
 def load_user_data() -> UserData:
     global cached_user_data, cached_user_data_time
+
     if not USER_SETTINGS_FILE.exists():
         save_user_data(cached_user_data := UserData())
         cached_user_data_time = USER_SETTINGS_FILE.stat().st_mtime
