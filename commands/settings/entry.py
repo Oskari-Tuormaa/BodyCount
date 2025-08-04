@@ -82,9 +82,6 @@ def command_created(args: adsk.core.CommandCreatedEventArgs):
     if user_data.shared_data_path is not None:
         dropbox_path.value = str(user_data.shared_data_path)
 
-    overwrite_check = inputs.addBoolValueInput('overwrite', 'Overwrite excel document', True)
-    overwrite_check.value = user_data.overwrite
-
     inputs.addSeparatorCommandInput('')
     inputs.addTextBoxCommandInput('', '', '<h3><center>Shared Data</center></h3>', 1, True)
     inputs.addTextBoxCommandInput('', '', '<i><center>These settings are saved in Dropbox.</center></i>', 4, True)
@@ -195,11 +192,9 @@ def input_changed(args: adsk.core.InputChangedEventArgs):
 def command_execute(args: adsk.core.CommandEventArgs):
     inputs = args.command.commandInputs
     dropbox_path: adsk.core.StringValueCommandInput = inputs.itemById('dropbox_path')
-    overwrite: adsk.core.BoolValueCommandInput = inputs.itemById('overwrite')
 
     user_data = settings_lib.load_user_data()
     user_data.shared_data_path = dropbox_path.value
-    user_data.overwrite = overwrite.value
     settings_lib.save_user_data(user_data)
 
     try:
