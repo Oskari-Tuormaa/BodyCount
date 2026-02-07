@@ -35,7 +35,7 @@ try:
         p.wait()
 
         ui.messageBox("Package install done. Please restart Fusion.")
-        sys.exit(0)
+        sys.exit()
 except:
     futil.handle_error('bodycount_setup')
 

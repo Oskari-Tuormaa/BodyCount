@@ -141,17 +141,17 @@ def command_created(args: adsk.core.CommandCreatedEventArgs):
 
 def validate_inputs(args: adsk.core.ValidateInputsEventArgs):
     inputs = args.inputs
-    wood_table: adsk.core.TableCommandInput = inputs.itemById('modules')
+    wood_table = adsk.core.TableCommandInput.cast(inputs.itemById('modules'))
 
     dropdowns_filled = True
     for i in range(1, wood_table.rowCount):
-        detail_dropdown: adsk.core.DropDownCommandInput = wood_table.getInputAtPosition(i, 1)
-        wood_dropdown: adsk.core.DropDownCommandInput = wood_table.getInputAtPosition(i, 2)
+        detail_dropdown = adsk.core.DropDownCommandInput.cast(wood_table.getInputAtPosition(i, 1))
+        wood_dropdown = adsk.core.DropDownCommandInput.cast(wood_table.getInputAtPosition(i, 2))
 
         if detail_dropdown.selectedItem is None or wood_dropdown.selectedItem is None:
             dropdowns_filled = False
 
-    excel_path_inp: adsk.core.StringValueCommandInput = inputs.itemById('excel_path')
+    excel_path_inp = adsk.core.StringValueCommandInput.cast(inputs.itemById('excel_path'))
     excel_path = Path(excel_path_inp.value)
     is_valid_excel_path = excel_path.is_absolute() and excel_path.is_file()
 
@@ -160,12 +160,12 @@ def validate_inputs(args: adsk.core.ValidateInputsEventArgs):
 
 def update_file_data(inputs: adsk.core.CommandInputs):
     file_data = settings_lib.load_file_data()
-    modules_table: adsk.core.TableCommandInput = inputs.itemById('modules')
+    modules_table = adsk.core.TableCommandInput.cast(inputs.itemById('modules'))
 
     for i in range(1, modules_table.rowCount):
-        category_name_inp: adsk.core.TextBoxCommandInput = modules_table.getInputAtPosition(i, 0)
-        detail_dropdown: adsk.core.DropDownCommandInput = modules_table.getInputAtPosition(i, 1)
-        wood_dropdown: adsk.core.DropDownCommandInput = modules_table.getInputAtPosition(i, 2)
+        category_name_inp = adsk.core.TextBoxCommandInput.cast(modules_table.getInputAtPosition(i, 0))
+        detail_dropdown = adsk.core.DropDownCommandInput.cast(modules_table.getInputAtPosition(i, 1))
+        wood_dropdown = adsk.core.DropDownCommandInput.cast(modules_table.getInputAtPosition(i, 2))
 
         detail_material = detail_dropdown.selectedItem.name if detail_dropdown.selectedItem is not None else None
         wood_material = wood_dropdown.selectedItem.name if wood_dropdown.selectedItem is not None else None
@@ -181,7 +181,7 @@ def update_file_data(inputs: adsk.core.CommandInputs):
                 wood_material=wood_material
             )
 
-    excel_path_inp: adsk.core.StringValueCommandInput = inputs.itemById('excel_path')
+    excel_path_inp = adsk.core.StringValueCommandInput.cast(inputs.itemById('excel_path'))
     file_data.excel_path = Path(excel_path_inp.value)
     settings_lib.save_file_data(file_data)
 
@@ -194,31 +194,44 @@ def input_changed(args: adsk.core.InputChangedEventArgs):
         new_path = get_input_file_path()
         if new_path is None:
             return
-        excel_path_input: adsk.core.StringValueCommandInput = inputs.itemById('excel_path')
+        excel_path_input = adsk.core.StringValueCommandInput.cast(inputs.itemById('excel_path'))
         excel_path_input.value = str(new_path)
 
 
-def command_execute(args: adsk.core.CommandEventArgs):
-    product = app.activeProduct
-    design = adsk.fusion.Design.cast(product)
-    rootComp = design.rootComponent
+def fix_detail_number(body: counting_lib.Body, material: str) -> counting_lib.Body:
+    shared_data = settings_lib.load_shared_data()
+    EXTRACT_SUB_NUMBER_PATTERN = re.compile(r"^((?:9[7-9]\..*? )?10\.)(\d+)")
 
-    inputs = args.command.commandInputs
+    if (match := EXTRACT_SUB_NUMBER_PATTERN.match(body.name)) is None:
+        return body
     
-    update_file_data(inputs)
+    sub_num = int(match.group(2))
 
+    new_num = sub_num
+    for (steel_num, brass_num) in shared_data.steel_brass_numbers:
+        if material == "Steel" and brass_num == sub_num:
+            new_num = steel_num
+        elif material == "Brass" and steel_num == sub_num:
+            new_num = brass_num
+
+    if new_num == sub_num:
+        return body
+
+    body.name = re.sub(EXTRACT_SUB_NUMBER_PATTERN, rf"\g<1>{new_num}", body.name)
+    return body
+
+
+def collect_bodies(inputs: adsk.core.CommandInputs, modules: list[counting_lib.Module]) -> list[counting_lib.Body]:
     modules_dict: dict[str, tuple[str, str]] = {}
-    modules_table = inputs.itemById("modules")
+    modules_table = adsk.core.TableCommandInput.cast(inputs.itemById("modules"))
     for i in range(1, modules_table.rowCount):
-        category_name_inp: adsk.core.TextBoxCommandInput = modules_table.getInputAtPosition(i, 0)
-        detail_dropdown: adsk.core.DropDownCommandInput = modules_table.getInputAtPosition(i, 1)
-        wood_dropdown: adsk.core.DropDownCommandInput = modules_table.getInputAtPosition(i, 2)
+        category_name_inp = adsk.core.TextBoxCommandInput.cast(modules_table.getInputAtPosition(i, 0))
+        detail_dropdown = adsk.core.DropDownCommandInput.cast(modules_table.getInputAtPosition(i, 1))
+        wood_dropdown = adsk.core.DropDownCommandInput.cast(modules_table.getInputAtPosition(i, 2))
         modules_dict[category_name_inp.formattedText] = (
             detail_dropdown.selectedItem.name,
             wood_dropdown.selectedItem.name
         )
-
-    modules = counting_lib.collect_modules_under(rootComp)
 
     MATCH_WOOD_PATTERN = re.compile(r"^(9[7-9]\..*? )?([1-9]|12|1[4-6])\.")
     MATCH_DETAIL_PATTERN = re.compile(r"^(9[7-9]\..*? )?10\.")
@@ -234,6 +247,7 @@ def command_execute(args: adsk.core.CommandEventArgs):
                 material = wood_type
             elif MATCH_DETAIL_PATTERN.match(body.name):
                 material = detail_type
+                body = fix_detail_number(body, material)
 
             key = (body.name, material)
 
@@ -247,8 +261,22 @@ def command_execute(args: adsk.core.CommandEventArgs):
     
     bodies = list(bodies_dict.values())
     counting_lib.human_sort(bodies, key=lambda x: x.name)
+    return bodies
 
-    excel_path_input: adsk.core.StringValueCommandInput = inputs.itemById('excel_path')
+
+def command_execute(args: adsk.core.CommandEventArgs):
+    product = app.activeProduct
+    design = adsk.fusion.Design.cast(product)
+    rootComp = design.rootComponent
+
+    inputs = args.command.commandInputs
+    
+    update_file_data(inputs)
+
+    modules = counting_lib.collect_modules_under(rootComp)
+    bodies = collect_bodies(inputs, modules)
+
+    excel_path_input = adsk.core.StringValueCommandInput.cast(inputs.itemById('excel_path'))
     excel_path = excel_path_input.value
 
     if excel_path == "":
