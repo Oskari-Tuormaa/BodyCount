@@ -98,7 +98,7 @@ def command_created(args: adsk.core.CommandCreatedEventArgs):
     inputs.addTextBoxCommandInput('', '', '<h2><center>Shared Data</center></h2>', 1, True)
     inputs.addTextBoxCommandInput('', '', '<i><center>These settings are saved in Dropbox.</center></i>', 4, True)
 
-    if user_data.shared_data_path is not None and Path(user_data.shared_data_path).exists():
+    if user_data.shared_data_path is not None and Path(user_data.shared_data_path).exists() and settings_lib.is_directory_writable(Path(user_data.shared_data_path)):
         shared_data = settings_lib.load_shared_data()
 
         # Wood types table

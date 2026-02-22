@@ -1,5 +1,4 @@
 import adsk.core
-import os
 from .user_settings import load_user_data, UserData
 
 from serde import serde
@@ -17,7 +16,9 @@ cached_shared_data: SharedData | None = None
 cached_shared_data_time: float = 0
 
 def is_directory_writable(path: Path) -> bool:
-    """Test if a directory is writable using os.access().
+    """Test if a directory is writable by attempting to create and delete a test file.
+    
+    This is more reliable than os.access() on Windows, which can give false positives.
     
     @param path The directory path to test.
     @return True if the directory is writable, False otherwise.
@@ -25,9 +26,13 @@ def is_directory_writable(path: Path) -> bool:
     if not path.is_dir():
         return False
     
+    # Try to create a temporary test file
+    test_file = path / ".bodycount_write_test"
     try:
-        return os.access(str(path), os.W_OK)
-    except (PermissionError, OSError):
+        test_file.write_text("")
+        test_file.unlink()
+        return True
+    except (PermissionError, OSError, IOError):
         return False
 
 def get_shared_data_path() -> Path:
