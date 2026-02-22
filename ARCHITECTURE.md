@@ -264,7 +264,7 @@ BodyCount/
 }
 ```
 
-### Shared Settings (`Dropbox/Vermland/The Collection/BodyCount/shared_settings.json`)
+### Shared Settings (`<Dropbox Path>/Vermland/The Collection/BodyCount/shared_settings.json`)
 ```json
 {
     "wood_materials": ["Material1", "Material2", ...],
