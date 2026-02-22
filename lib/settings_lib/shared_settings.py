@@ -1,3 +1,5 @@
+import tempfile
+import adsk.core
 from .user_settings import load_user_data, UserData
 
 from serde import serde
@@ -13,6 +15,22 @@ class SharedData:
 
 cached_shared_data: SharedData | None = None
 cached_shared_data_time: float = 0
+
+def is_directory_writable(path: Path) -> bool:
+    """Test if a directory is writable by attempting to create a temporary file.
+    
+    @param path The directory path to test.
+    @return True if the directory is writable, False otherwise.
+    """
+    if not path.is_dir():
+        return False
+    
+    try:
+        with tempfile.NamedTemporaryFile(dir=str(path)):
+            pass
+        return True
+    except (PermissionError, OSError):
+        return False
 
 def get_shared_data_path() -> Path:
     user_data = load_user_data()
@@ -39,7 +57,12 @@ def load_shared_data() -> SharedData:
     return cached_shared_data
 
 def save_shared_data(shared_data: SharedData):
+    from ...lib import fusionAddInUtils as futil
     shared_data_path = get_shared_data_path()
-    shared_data_path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        shared_data_path.parent.mkdir(parents=True, exist_ok=True)
+    except (PermissionError, OSError) as e:
+        futil.log(f"Failed to create directory: {shared_data_path.parent}", adsk.core.LogLevels.ErrorLogLevel)
+        raise
     with shared_data_path.open('w') as fd:
         fd.write(to_json(shared_data, indent=4))

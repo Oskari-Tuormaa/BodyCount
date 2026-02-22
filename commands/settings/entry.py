@@ -90,6 +90,10 @@ def command_created(args: adsk.core.CommandCreatedEventArgs):
     if user_data.shared_data_path is not None:
         dropbox_path.value = str(user_data.shared_data_path)
 
+    # Error message for path validation
+    error_message = inputs.addTextBoxCommandInput('path_error', '', '', 2, True)
+    error_message.isFullWidth = True
+
     inputs.addSeparatorCommandInput('')
     inputs.addTextBoxCommandInput('', '', '<h2><center>Shared Data</center></h2>', 1, True)
     inputs.addTextBoxCommandInput('', '', '<i><center>These settings are saved in Dropbox.</center></i>', 4, True)
@@ -165,13 +169,33 @@ def command_created(args: adsk.core.CommandCreatedEventArgs):
     futil.add_handler(args.command.inputChanged, input_changed)
     futil.add_handler(args.command.validateInputs, validate_inputs)
 
-def validate_inputs(args: adsk.core.ValidateInputsEventArgs):
-    # futil.log('validate')
-    inputs = args.inputs
-
+def update_path_error_message(inputs: adsk.core.CommandInputs) -> bool:
+    """Update the path error message and return whether the path is valid.
+    
+    @param inputs The command inputs.
+    @return True if the path is valid and writable, False otherwise.
+    """
     dropbox_path = adsk.core.StringValueCommandInput.cast(inputs.itemById('dropbox_path'))
+    error_message = adsk.core.TextBoxCommandInput.cast(inputs.itemById('path_error'))
+    
     path = Path(dropbox_path.value)
-    args.areInputsValid = path.is_absolute() and path.is_dir()
+    
+    # Check if path is absolute and is a directory
+    if not path.is_absolute() or not path.is_dir():
+        error_message.formattedText = '<span style="color: red;">✗ Invalid path</span>'
+        return False
+    
+    # Check if directory is writable
+    if not settings_lib.is_directory_writable(path):
+        error_message.formattedText = '<span style="color: red;">✗ Directory not writable (permission denied)</span>'
+        return False
+    
+    error_message.formattedText = '<span style="color: green;">✓ Path is valid</span>'
+    return True
+
+def validate_inputs(args: adsk.core.ValidateInputsEventArgs):
+    inputs = args.inputs
+    args.areInputsValid = update_path_error_message(inputs)
 
 def input_changed(args: adsk.core.InputChangedEventArgs):
     # futil.log('input_changed')
@@ -187,6 +211,7 @@ def input_changed(args: adsk.core.InputChangedEventArgs):
         if result == adsk.core.DialogResults.DialogOK:
             dropbox_path = adsk.core.StringValueCommandInput.cast(inputs.itemById('dropbox_path'))
             dropbox_path.value = folder_dialog.folder
+            # Validation will be triggered automatically after path changes
 
     elif changed_input.id == 'wood_add':
         wood_table = adsk.core.TableCommandInput.cast(args.inputs.itemById('wood_types'))
@@ -252,7 +277,14 @@ def command_execute(args: adsk.core.CommandEventArgs):
 
     try:
         shared_data = settings_lib.load_shared_data()
-    except RuntimeError:
+    except RuntimeError as e:
+        ui.messageBox("Please set a valid Dropbox path", "Settings Error")
+        return
+    except (PermissionError, OSError) as e:
+        ui.messageBox(
+            f"Cannot write to directory: {str(e)}\n\nPlease select a different directory.",
+            "Permission Error"
+        )
         return
 
     cast_str = lambda x: adsk.core.StringValueCommandInput.cast(x)
