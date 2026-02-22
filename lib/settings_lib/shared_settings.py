@@ -8,7 +8,6 @@ from pathlib import Path
 
 @serde
 class SharedData:
-    detail_materials: list[str] = field(default_factory=lambda: [])
     wood_materials: list[str] = field(default_factory=lambda: [])
     steel_brass_numbers: list[tuple[int, int]] = field(default_factory=lambda: [])
 

@@ -109,7 +109,7 @@ def command_created(args: adsk.core.CommandCreatedEventArgs):
 
     module_table = inputs.addTableCommandInput('modules', 'Modules', 3, '1:1:1')
     module_table.addCommandInput(inputs.addTextBoxCommandInput('', '', '<b>Category</b>', 1, True), 0, 0)
-    module_table.addCommandInput(inputs.addTextBoxCommandInput('', '', '<b>Detail material</b>', 1, True), 0, 1)
+    module_table.addCommandInput(inputs.addTextBoxCommandInput('', '', '<b>Steel/Brass</b>', 1, True), 0, 1)
     module_table.addCommandInput(inputs.addTextBoxCommandInput('', '', '<b>Wood material</b>', 1, True), 0, 2)
 
     groups = {module.category for module in modules}
@@ -125,8 +125,9 @@ def command_created(args: adsk.core.CommandCreatedEventArgs):
             selected_detail = module_data.detail_material
             selected_wood = module_data.wood_material
 
-        for detail_material in shared_data.detail_materials:
-            detail_dropdown.listItems.add(detail_material, detail_material == selected_detail)
+        # Steel and Brass are the only supported materials
+        for steel_brass_material in ['Steel', 'Brass']:
+            detail_dropdown.listItems.add(steel_brass_material, steel_brass_material == selected_detail)
 
         for wood_material in shared_data.wood_materials:
             wood_dropdown.listItems.add(wood_material, wood_material == selected_wood)

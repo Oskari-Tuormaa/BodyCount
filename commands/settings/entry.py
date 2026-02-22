@@ -116,21 +116,7 @@ def command_created(args: adsk.core.CommandCreatedEventArgs):
             wood_table.addCommandInput(inputs.addStringValueInput(f'{counter}', '',  wood_type), i, 0)
             counter += 1
 
-        # Detail materials table
-        inputs.addTextBoxCommandInput('', '', '<h3>Details materials</h3>', 1, True)
-        detail_table = inputs.addTableCommandInput('detail_materials', 'Detail materials', 1, '1')
-        detail_table.maximumVisibleRows = 10
-        detail_table.tablePresentationStyle = adsk.core.TablePresentationStyles.transparentBackgroundTablePresentationStyle
 
-        add_btn = inputs.addBoolValueInput('detail_add', 'Add detail material', False, str(ADD_FOLDER))
-        remove_btn = inputs.addBoolValueInput('detail_remove', 'Remove detail material', False, str(REMOVE_FOLDER))
-        detail_table.addToolbarCommandInput(add_btn)
-        detail_table.addToolbarCommandInput(remove_btn)
-
-        for i, detail_material in enumerate(shared_data.detail_materials):
-            detail_table.addCommandInput(inputs.addStringValueInput(f'{counter}', '', detail_material), i, 0)
-            counter += 1
-        
         # Steel <-> brass numbers table
         inputs.addTextBoxCommandInput('', '', '<h3>Steel/brass part numbers</h3>', 1, True)
         steel_brass_header_table = inputs.addTableCommandInput('', '', 2, '1:1')
@@ -233,22 +219,6 @@ def input_changed(args: adsk.core.InputChangedEventArgs):
         wood_table.deleteRow(i)
         wood_table.selectedRow = -1
 
-    elif changed_input.id == 'detail_add':
-        detail_table = adsk.core.TableCommandInput.cast(args.inputs.itemById('detail_materials'))
-        detail_table.addCommandInput(
-            inputs.addStringValueInput(f'{counter}', ''), detail_table.rowCount, 0
-        )
-        counter += 1
-
-    elif changed_input.id == 'detail_remove':
-        detail_table = adsk.core.TableCommandInput.cast(args.inputs.itemById('detail_materials'))
-        if detail_table.rowCount == 0:
-            return
-        if (i := detail_table.selectedRow) == -1 or i >= detail_table.rowCount:
-            i = detail_table.rowCount - 1
-        detail_table.deleteRow(i)
-        detail_table.selectedRow = -1
-
     elif changed_input.id == 'numbers_add':
         steel_brass_table = adsk.core.TableCommandInput.cast(args.inputs.itemById('steel_brass'))
         row = steel_brass_table.rowCount
@@ -299,13 +269,6 @@ def command_execute(args: adsk.core.CommandEventArgs):
         shared_data.wood_materials = list(
             cast_str(wood_table.getInputAtPosition(i, 0)).value
             for i in range(wood_table.rowCount)
-        )
-
-    detail_table = adsk.core.TableCommandInput.cast(inputs.itemById('detail_materials'))
-    if detail_table is not None:
-        shared_data.detail_materials = list(
-            cast_str(detail_table.getInputAtPosition(i, 0)).value
-            for i in range(detail_table.rowCount)
         )
 
     steel_brass_table = adsk.core.TableCommandInput.cast(inputs.itemById('steel_brass'))
