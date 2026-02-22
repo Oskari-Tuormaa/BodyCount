@@ -1,5 +1,5 @@
-import tempfile
 import adsk.core
+import os
 from .user_settings import load_user_data, UserData
 
 from serde import serde
@@ -17,7 +17,7 @@ cached_shared_data: SharedData | None = None
 cached_shared_data_time: float = 0
 
 def is_directory_writable(path: Path) -> bool:
-    """Test if a directory is writable by attempting to create a temporary file.
+    """Test if a directory is writable using os.access().
     
     @param path The directory path to test.
     @return True if the directory is writable, False otherwise.
@@ -26,9 +26,7 @@ def is_directory_writable(path: Path) -> bool:
         return False
     
     try:
-        with tempfile.NamedTemporaryFile(dir=str(path)):
-            pass
-        return True
+        return os.access(str(path), os.W_OK)
     except (PermissionError, OSError):
         return False
 
