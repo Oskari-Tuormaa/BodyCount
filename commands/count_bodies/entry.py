@@ -234,8 +234,8 @@ def collect_bodies(inputs: adsk.core.CommandInputs, modules: list[counting_lib.M
             wood_dropdown.selectedItem.name
         )
 
-    MATCH_WOOD_PATTERN = re.compile(r"^(9[7-9]\..*? )?([1-9]|12|1[4-6])\.")
-    MATCH_DETAIL_PATTERN = re.compile(r"^(9[7-9]\..*? )?10\.")
+    MATCH_WOOD_PATTERN = re.compile(r"^(9[7-9]\..*?[ _])?([1-9]|12|1[4-6])\.")
+    MATCH_DETAIL_PATTERN = re.compile(r"^(9[7-9]\..*?[ _])?10\.")
 
     bodies_dict: dict[tuple[str, str], counting_lib.Body] = {}
     for module in modules:
