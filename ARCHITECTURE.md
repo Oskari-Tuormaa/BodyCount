@@ -155,7 +155,7 @@ rectangle "Libraries" {
 
 rectangle "Storage" {
   database "User Settings\n(.user-settings.json)" as user_settings_db
-  database "Shared Settings\n(Dropbox/BodyCount.json)" as shared_settings_db
+  database "Shared Settings" as shared_settings_db
 }
 
 user --> ui_dialog : enter Dropbox path
