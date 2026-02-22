@@ -204,6 +204,10 @@ def input_changed(args: adsk.core.InputChangedEventArgs):
     inputs = args.inputs
 
     if changed_input.id == 'select_folder':
+        select_button = adsk.core.BoolValueCommandInput.cast(changed_input)
+        if select_button.value == False:
+            return
+
         folder_dialog = ui.createFolderDialog()
         folder_dialog.title = 'Select the DropBox root folder'
         result = folder_dialog.showDialog()
