@@ -219,6 +219,7 @@ def fix_detail_number(body: counting_lib.Body, material: str) -> counting_lib.Bo
         return body
 
     body.name = re.sub(EXTRACT_SUB_NUMBER_PATTERN, rf"\g<1>{new_num}", body.name)
+    body.name = re.sub(r"(Brass|Steel)", material, body.name)
     return body
 
 
