@@ -1,37 +1,23 @@
-# How to Install This Fusion 360 Add-In
+# BodyCount
 
-Follow these steps to install and use this add-in in Autodesk Fusion 360:
+BodyCount is a Fusion 360 add-in created for and owned by Vermland, an interior design firm specializing in handcrafted modular design. It serves as a bridge between Fusion 360 and the Kitchen X Excel spreadsheet, automatically populating project data to enable accurate pricing calculations.
 
----
+## Installation
 
-## Installation Steps
+1. **Download and extract the add-in**: Download the BodyCount folder and extract it to the location where you want it installed.
 
-### Step 1: Download the Add-In
-1. Click the green **Code** button on this page.
-2. Select **Download ZIP** to download the add-in files as a `.zip` file.
-3. Locate the downloaded `.zip` file on your computer (usually in the `Downloads` folder).
-4. Extract the `.zip` file to a folder of your choice.
+2. **Open Fusion 360** and go to **Utilities** > **Add-Ins** > **Scripts and Add-Ins**.
 
----
+3. In the **Scripts and Add-Ins** dialog, click the dropdown arrow next to the **+** button in the toolbar.
 
-### Step 2: Locate Fusion 360’s Add-In Folder
-1. Open Fusion 360.
-2. Go to the **Utilities** tab.
-3. Select **Add-Ins** from the toolbar.
-4. Go to the **Add-Ins** tab of the **Scripts and Add-Ins** menu.
-5. In the Add-Ins dialog, click the **+** button.
-   This will open the folder where Fusion 360 stores add-ins.
+4. Select **"Script or add-in from device"** to browse for the add-in folder.
 
----
+5. Navigate to and select the extracted BodyCount folder, then click **Open**.
 
-### Step 3: Install the Add-In
-1. Copy the extracted folder (from Step 1) containing the add-in files.
-2. Paste the folder into the **AddIns** folder that you opened in Step 2.
+6. **Restart Fusion 360**. The add-in will now appear in the Add-Ins list.
 
----
+7. Click **Run** to enable the add-in for the first time. Optionally, check **Run on Startup** to auto-load it when Fusion 360 starts.
 
-### Step 4: Enable the Add-In
-1. Restart Fusion 360 to detect the new add-in.
-2. Open the **Add-Ins** dialog again (via the **Utilities** tab).
-3. Find the add-in in the list.
-4. Click **Run** to enable it (or enable **Load at Startup** if you want it to start automatically every time Fusion 360 opens).
+## First-Time Setup
+
+When you run BodyCount for the first time, it will automatically install required Python packages (pyserde, pypiwin32, and exceltypes). A terminal window may briefly appear during this process. After installation completes, you will see a message asking you to restart Fusion 360. Please restart the application to complete the setup.

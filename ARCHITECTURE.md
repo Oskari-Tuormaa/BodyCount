@@ -1,5 +1,7 @@
 # BodyCount Add-In Architecture
 
+> **Note**: This document was generated using AI. While it aims to provide an accurate overview, please take it with a grain of salt and verify critical details against the actual codebase.
+
 ## System Overview
 
 BodyCount is a Fusion 360 add-in with three main commands that help users count and categorize CAD bodies, export data to Excel, and visualize ungrouped components.
