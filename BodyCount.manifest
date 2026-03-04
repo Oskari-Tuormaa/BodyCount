@@ -4,7 +4,7 @@
 	"id":	"fe214900-79b1-457a-a949-39388b572ba4",
 	"author":	"Oskari Kristian Tuormaa",
 	"description":	{
-		"":	""
+		"":	"Bridge between Fusion 360 and Kitchen X Excel spreadsheet for accurate project pricing calculations"
 	},
 	"version":	"0.1",
 	"runOnStartup":	false,
