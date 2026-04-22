@@ -6,8 +6,8 @@
 	"description":	{
 		"":	"Bridge between Fusion 360 and Kitchen X Excel spreadsheet for accurate project pricing calculations"
 	},
-	"version":	"0.1",
+	"version":	"1.0",
 	"runOnStartup":	false,
-	"supportedOS":	"windows|mac",
+	"supportedOS":	"windows",
 	"editEnabled":	true
 }
